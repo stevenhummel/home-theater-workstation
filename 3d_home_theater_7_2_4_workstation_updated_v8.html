@@ -4070,7 +4070,7 @@ function v8ApplyConfig(cfg) {
  if(s.layers && typeof s.layers==='object') Object.keys(state.layers).forEach(k=>{if(typeof s.layers[k]==='boolean')state.layers[k]=s.layers[k];});
  const ids={roomW:'sliderRoomW',roomD:'sliderRoomD',ceilH:'sliderCeilH',mlpZ:'sliderMlpZ',earY:'sliderEarY'};
  Object.entries(ids).forEach(([k,id])=>{if(v8$(id))v8$(id).value=state[k];});
- if(cfg.v8){const v=cfg.v8;[['v8TolRoom',v.tolerance?.room],['v8TolSpeaker',v.tolerance?.speaker],['v8TolSeat',v.tolerance?.seat],['v8TolClear',v.tolerance?.clear],['v8SeatL',v.seats?.left],['v8SeatC',v.seats?.center],['v8SeatR',v.seats?.right],['v8DispH',v.directivity?.horizontal],['v8DispV',v.directivity?.vertical],['v8DispSource',v.directivity?.source]].forEach(([id,val])=>{if(val!==undefined && v$(id))v8$(id).value=val;});}
+ if(cfg.v8){const v=cfg.v8;[['v8TolRoom',v.tolerance?.room],['v8TolSpeaker',v.tolerance?.speaker],['v8TolSeat',v.tolerance?.seat],['v8TolClear',v.tolerance?.clear],['v8SeatL',v.seats?.left],['v8SeatC',v.seats?.center],['v8SeatR',v.seats?.right],['v8DispH',v.directivity?.horizontal],['v8DispV',v.directivity?.vertical],['v8DispSource',v.directivity?.source]].forEach(([id,val])=>{if(val!==undefined && v8$(id))v8$(id).value=val;});}
  setActiveStandard(state.standard);setGhostStandard(state.ghostStandard);setAtmosOrientation(state.atmosOrient);setAtmosMountOption(state.atmosMountOpt);setBedMountMode(state.bedMountMode);updateAll();
 }
 function v8LoadSnapshots(){try{v8Snapshots=JSON.parse(localStorage.getItem('htw_v8_snapshots')||'{}');}catch(e){v8Snapshots={};}v8RefreshSnapshotSelect();}
