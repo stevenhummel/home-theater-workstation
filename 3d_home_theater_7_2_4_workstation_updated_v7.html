@@ -3157,7 +3157,7 @@
                     status: 'REPORTED COORDINATES VS. INSTALLED ACTUALS',
                     statusColor: 'text-cyan-400',
                     lines: [
-                        '• Source room: 228"W × 208"D × 88"H. Report does not state an exact MLP coordinate or front L/R Z coordinate.',
+                        '• Source room: 228"W × 208"D × 88"H; 3 seats / 1 row; reported seating width 102" and left aisle 40". The 110" dimension is screen-to-front-of-first-row, NOT a confirmed MLP coordinate. The report does not state an exact MLP coordinate or front L/R Z coordinate.',
                         `• Front L/R: target separation 132.00" (±66.00" X); actual separation ${Math.abs(fr.x - fl.x).toFixed(2)}". Front Z remains the workstation's 13.0" datum because the report does not specify it.`,
                         `• Main surrounds: target Z=121.00" from screen wall; actual Z=${sl.z.toFixed(2)}", tweeter Y target=50.00", actual Y=${sl.y.toFixed(2)}".`,
                         `• Rear surrounds: target separation 86.60" (±43.30" X), rear-wall mounted; actual separation ${Math.abs(layout.channels.find(ch => ch.id === 'SBR').x - sbl.x).toFixed(2)}", actual rear-wall clearance ${(state.roomD - (sbl.z + sbl.dims.d / 2)).toFixed(2)}", tweeter Y=${sbl.y.toFixed(2)}".`,
