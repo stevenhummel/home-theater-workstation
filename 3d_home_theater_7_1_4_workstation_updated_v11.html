@@ -4116,7 +4116,7 @@
             document.getElementById('ghostSelect').value = 'none';
             setAtmosOrientation('horizontal');
             setAtmosMountOption(1);
-            setBedMountMode('stands');
+            setBedMountMode('wall');
         }
 
         function exportCSV(type) {
@@ -4263,7 +4263,7 @@ window.addEventListener('load',()=>{updateV10SystemUI();v8LoadSnapshots();v8RunA
  }
  function update(){
   try{
-   const wIn=Number(window.state?.roomW)||228,dIn=Number(window.state?.roomD)||208,hIn=Number(window.state?.ceilH)||91;
+   const wIn=Number(state?.roomW)||228,dIn=Number(state?.roomD)||208,hIn=Number(state?.ceilH)||91;
    const w=wIn/12,d=dIn/12,h=hIn/12,vol=w*d*h;
    const floor=w*d,ceil=floor,walls=2*w*h+2*d*h,area=floor+ceil+walls;
    const aw=clamp(num('v11WallAlpha',.05),0,1),af=clamp(num('v11FloorAlpha',.15),0,1),ac=clamp(num('v11CeilAlpha',.1),0,1),extra=Math.max(0,num('v11ExtraSabins',0));
@@ -4282,7 +4282,7 @@ window.addEventListener('load',()=>{updateV10SystemUI();v8LoadSnapshots();v8RunA
    $('v11SpeakerHeadroom').textContent=fmt(spl-target,1)+' dB vs '+target+' dB target • '+fmt(reqW,0)+' W estimated for target';
    const subDist=Math.max(1,num('v11SubDistance',10)),bassTarget=num('v11BassTarget',105),delta=-20*Math.log10((subDist*.3048)/2);
    const subRows=subCEA.map(x=>({f:x.f,max:x.spl+delta,margin:x.spl+delta-bassTarget}));
-   $('v11SubOutput').innerHTML='<div class="text-[10px] text-slate-500 mb-1">CEA-2010-A maximum output adjusted from 2 m to '+fmt(subDist,1)+' ft by free-field distance law</div><div class="grid grid-cols-2 gap-x-3 gap-y-1">'+subRows.map(x=>'<div class="flex justify-between gap-2 border-b border-slate-800 py-1"><span>'+x.f+' Hz</span><span class="'+(x.margin>=0?'text-emerald-300':'text-amber-300')+'">'+fmt(x.max,1)+' dB <span class="text-slate-500">('+ (x.margin>=0?'+':'')+fmt(x.margin,1)+' dB)</span></span></div>').join('')+'</div><div class="text-[10px] text-slate-500 mt-2">Measured 2 m peak figures: 20–80 Hz. Output is burst-limited maximum, not continuous program capability. '+(Number(window.state?.subCount)===2?'Two-sub mode selected; no automatic +6 dB credit is applied because phase and placement are unknown.':'Single original Speedwoofer 10S modeled.')+'</div>';
+   $('v11SubOutput').innerHTML='<div class="text-[10px] text-slate-500 mb-1">CEA-2010-A maximum output adjusted from 2 m to '+fmt(subDist,1)+' ft by free-field distance law</div><div class="grid grid-cols-2 gap-x-3 gap-y-1">'+subRows.map(x=>'<div class="flex justify-between gap-2 border-b border-slate-800 py-1"><span>'+x.f+' Hz</span><span class="'+(x.margin>=0?'text-emerald-300':'text-amber-300')+'">'+fmt(x.max,1)+' dB <span class="text-slate-500">('+ (x.margin>=0?'+':'')+fmt(x.margin,1)+' dB)</span></span></div>').join('')+'</div><div class="text-[10px] text-slate-500 mt-2">Measured 2 m peak figures: 20–80 Hz. Output is burst-limited maximum, not continuous program capability. '+(Number(state?.subCount)===2?'Two-sub mode selected; no automatic +6 dB credit is applied because phase and placement are unknown.':'Single original Speedwoofer 10S modeled.')+'</div>';
    const modes=modeList(w,d,h);
    $('v11Modes').innerHTML='<table class="w-full min-w-[390px]"><thead><tr class="text-slate-500 border-b border-slate-700"><th class="text-left p-1">Hz</th><th class="text-left p-1">Type</th><th class="text-left p-1">Axis / order</th></tr></thead><tbody>'+modes.map(x=>'<tr class="border-b border-slate-800/70"><td class="p-1 font-mono text-cyan-300">'+fmt(x.f,1)+'</td><td class="p-1">'+x.type+'</td><td class="p-1">'+x.axis+' / '+x.order+'</td></tr>').join('')+'</tbody></table>';
    $('v11Assumptions').innerHTML='<div><b class="text-white">Room:</b> '+fmt(w,2)+' × '+fmt(d,2)+' × '+fmt(h,2)+' ft; '+fmt(area,0)+' ft² total surface area. Room shape treated as rectangular; bulkhead/doorways/alcoves are not yet included in modal geometry.</div><div><b class="text-white">Speaker:</b> '+(sp[2]||'Selected speaker')+'. '+fmt(sens,1)+' dB at 1 W/1 m used; '+watts+' W/ch and '+dist+' ft entered. Idealized free-field calculation; no compression, impedance curve, power compression, crest factor or channel-sharing effects.</div><div><b class="text-white">Subwoofer:</b> Original RSL Speedwoofer 10S CEA-2010-A output from Brent Butterworth via BassLab; measured 2 m peak. Distance scaling only; actual in-room response requires placement and REW data.</div><div><b class="text-white">Room decay:</b> Sabine RT60 from user-selected broadband absorption coefficients. Real absorption is frequency-dependent; octave-band coefficients are required for useful bass/treble RT predictions.</div><div><b class="text-white">Interpretation:</b> Room modes flag frequencies to investigate. Their strength and exact seat nulls require source/listener coordinates, boundary losses and preferably multi-position REW sweeps.</div>';
