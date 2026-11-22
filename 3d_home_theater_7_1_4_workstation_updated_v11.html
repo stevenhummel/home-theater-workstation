@@ -151,7 +151,7 @@
                 <div class="bg-[#0d1118] border border-slate-800 rounded-xl p-3 flex items-center justify-between gap-2">
                     <div>
                         <div class="text-xs font-semibold text-white">Ascend HTM-200SE2 Orientation</div>
-                        <div id="orientDimsText" class="text-[11px] text-slate-400">Horizontal: 12.25" W × 6.5" H × 6.75" D (Low-Profile)</div>
+                        <div id="orientDimsText" class="text-[11px] text-slate-400">Horizontal: 11" W × 6.5" H × 6.375" D</div>
                     </div>
                     <div class="flex bg-[#161e2b] p-1 rounded-lg border border-slate-700/80 shrink-0">
                         <button id="btnOrientVert" onclick="setAtmosOrientation('vertical')" class="px-2.5 py-1 rounded-md text-xs font-semibold text-slate-300 hover:text-white transition">Vertical</button>
@@ -943,9 +943,9 @@
 
         function getAtmosCabinetDims() {
             if (state.atmosOrient === 'horizontal') {
-                return { w: 12.25, h: 6.5, d: 6.75, label: 'Horizontal (12.25" W × 6.5" H × 6.75" D)' };
+                return { w: 11, h: 6.5, d: 6.375, label: 'Horizontal (11" W × 6.5" H × 6.375" D)' };
             }
-            return { w: 6.5, h: 12.25, d: 6.75, label: 'Vertical (6.5" W × 12.25" H × 6.75" D)' };
+            return { w: 6.5, h: 11, d: 6.375, label: 'Vertical (6.5" W × 11" H × 6.375" D)' };
         }
 
         // Geometry helpers shared by the Atmos placement solver and 3D mount renderer.
@@ -1489,7 +1489,7 @@
                 buildBedChannel('FL', 'Front Left Main', 'LCR', 'Monolith THX-365T', -mainHalfSpan, lcrTweeterY, 13.0, 9.4, 18.9, 10.6, lcrMount),
                 buildBedChannel('C', 'Center Channel', 'LCR', 'Monolith THX-365C', 0, ARCH.cabH + 4.7, 11.5, 22.0, 9.4, 10.6, 'Centered atop 70"×21"×19.5" Media Console (Bottom @ 19.5")'),
                 buildBedChannel('FR', 'Front Right Main', 'LCR', 'Monolith THX-365T', mainHalfSpan, lcrTweeterY, 13.0, 9.4, 18.9, 10.6, lcrMount),
-                buildBedChannel('SL', 'Side Surround Left', 'Surround', 'Ascend HTM-200SE2', -halfW + 6.5, stdKey === 'advice' ? adviceSurroundTweeterY : surroundTweeterY, sideZ, 6.5, 12.25, 6.75, surMount),
+                buildBedChannel('SL', 'Side Surround Left', 'Surround', 'Ascend HTM-200SE2', -halfW + 6.5, stdKey === 'advice' ? adviceSurroundTweeterY : surroundTweeterY, sideZ, 6.5, 11, 6.375, surMount),
                 buildBedChannel('SR', 'Side Surround Right', 'Surround', 'Ascend HTM-200SE2', halfW - 6.5, stdKey === 'advice' ? adviceSurroundTweeterY : surroundTweeterY, sideZ, 6.5, 12.25, 6.75, surMount),
                 buildBedChannel('SBL', 'Rear Surround Left', 'Rear', 'Monolith THX-265B', -rearHalfSpan, stdKey === 'advice' ? adviceSurroundTweeterY : rearTweeterY, stdKey === 'advice' ? state.roomD - 8.3 / 2 : state.roomD - 9.0, 8.7, 14.2, 8.3, surMount),
                 buildBedChannel('SBR', 'Rear Surround Right', 'Rear', 'Monolith THX-265B', rearHalfSpan, stdKey === 'advice' ? adviceSurroundTweeterY : rearTweeterY, stdKey === 'advice' ? state.roomD - 8.3 / 2 : state.roomD - 9.0, 8.7, 14.2, 8.3, surMount),
@@ -3114,8 +3114,8 @@
                         mending.position.set(0, 0, rearZ); mending.castShadow = true; spkGroup.add(mending);
                         [-3.25, 3.25].forEach(xw => {
                             for (let wi = 0; wi < 3; wi++) {
-                                const washer = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.045, 32), adapterMat);
-                                washer.rotation.x = Math.PI / 2; washer.position.set(xw, 0, rearZ - 0.10 - wi * 0.045);
+                                const washer = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.067, 32), adapterMat);
+                                washer.rotation.x = Math.PI / 2; washer.position.set(xw, 0, rearZ - 0.10 - wi * 0.067);
                                 washer.castShadow = true; spkGroup.add(washer);
                             }
                             const bolt = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.55, 16), adapterMat);
