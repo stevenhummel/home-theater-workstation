@@ -71,7 +71,7 @@
 
     <!-- Top Application Header -->
     <header class="no-print sticky top-0 z-40 bg-[#0d1118]/95 backdrop-blur-md border-b border-slate-800/90 px-4 lg:px-6 py-3">
-        <div class="max-w-[1860px] mx-auto flex flex-wrap items-center justify-between gap-3">
+        <div class="w-full max-w-none mx-auto flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-lg shadow-blue-950/60 border border-blue-400/30">
                     <i class="fa-solid fa-cube text-white text-lg"></i>
@@ -103,10 +103,10 @@
     </header>
 
     <!-- Main Workstation Grid -->
-    <main class="flex-1 max-w-[1860px] w-full mx-auto px-4 lg:px-6 py-5 grid grid-cols-1 xl:grid-cols-12 gap-5">
+    <main class="flex-1 w-full max-w-none min-w-0 mx-auto px-4 lg:px-6 2xl:px-8 py-5 grid grid-cols-1 xl:grid-cols-12 gap-5">
 
         <!-- LEFT CONTROL COLUMN -->
-        <aside class="no-print xl:col-span-4 space-y-5">
+        <aside class="no-print min-w-0 xl:col-span-4 space-y-5">
 
             <!-- SECTION 1: PLACEMENT STANDARD & 3D GHOST OVERLAY -->
             <section class="bg-[#11161f] border border-slate-800/90 rounded-2xl p-4 shadow-xl">
@@ -169,14 +169,10 @@
                     </button>
                 </div>
 
-                <div class="grid grid-cols-3 gap-2">
+                <div class="grid grid-cols-2 gap-2">
                     <button id="btnMountOpt1" onclick="setAtmosMountOption(1)" class="p-2.5 rounded-xl border border-blue-500 bg-blue-600/20 text-left transition">
                         <div class="text-xs font-bold text-white">Option 1</div>
                         <div class="text-[10px] text-blue-300 leading-tight mt-0.5">Pyle 90° Perpendicular Drop Poles</div>
-                    </button>
-                    <button id="btnMountOpt2" onclick="setAtmosMountOption(2)" class="p-2.5 rounded-xl border border-slate-800 bg-[#0d1118] hover:border-slate-700 text-left transition">
-                        <div class="text-xs font-bold text-slate-200">Option 2</div>
-                        <div class="text-[10px] text-slate-400 leading-tight mt-0.5">Bulkhead Vertical Drywall Face</div>
                     </button>
                     <button id="btnMountOpt3" onclick="setAtmosMountOption(3)" class="p-2.5 rounded-xl border border-slate-800 bg-[#0d1118] hover:border-slate-700 text-left transition">
                         <div class="text-xs font-bold text-slate-200">Option 3</div>
@@ -305,7 +301,7 @@
         </aside>
 
         <!-- RIGHT VIEWPORT & SCHEDULES COLUMN -->
-        <div class="xl:col-span-8 space-y-5">
+        <div class="min-w-0 xl:col-span-8 space-y-5">
 
             <!-- 3D INTERACTIVE RENDERER CARD -->
             <section id="viewportCard" class="bg-[#11161f] border border-slate-800/90 rounded-2xl p-4 shadow-2xl flex flex-col">
@@ -383,7 +379,6 @@
                             <label class="text-[10px] text-slate-400 block mb-1">Atmos Bulkhead Mount</label>
                             <select id="fsMountSelect" onchange="setAtmosMountOption(parseInt(this.value))" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
                                 <option value="1" selected>Opt 1: Pyle 90° Perpendicular Drop Poles</option>
-                                <option value="2">Opt 2: Bulkhead Vertical Drywall Face</option>
                                 <option value="3">Opt 3: Soffit Bracket (Up to 1" Edge)</option>
                             </select>
                         </div>
@@ -553,7 +548,7 @@
     
 <!-- V8 ENGINEERING EXTENSION: audit, tolerance, seat coverage, config, reports, regression -->
 
-  <section id="v9SpeakerEvidence" class="bg-[#11161f] border border-cyan-500/30 rounded-2xl p-4 lg:p-5 shadow-xl space-y-3">
+  <section id="v9SpeakerEvidence" class="col-span-1 xl:col-span-12 min-w-0 w-full bg-[#11161f] border border-cyan-500/30 rounded-2xl p-4 lg:p-5 shadow-xl space-y-3">
     <div class="flex flex-wrap items-start justify-between gap-3"><div><div class="text-[10px] font-mono uppercase tracking-widest text-cyan-300">V10 • Speaker & system evidence library</div><h2 class="text-lg font-bold text-white mt-1">Speaker specifications & independent measurements</h2><p class="text-xs text-slate-400 mt-1 max-w-4xl">Pre-populated for the speaker models already present in this room. Manufacturer claims, independent measurements and unverified gaps are kept separate. These are source-attributed summaries—not substitutes for the underlying response, impedance and polar data files.</p></div><span class="text-[10px] rounded bg-cyan-500/10 border border-cyan-500/30 px-2 py-1 text-cyan-200">4 speaker models • 1 identified subwoofer</span></div>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs"><div class="bg-[#0d1118] border border-slate-800 rounded-lg p-3"><div class="text-slate-500">Independent measurement coverage</div><div class="text-lg font-bold text-emerald-300">4 / 4 speaker models</div><div class="text-[10px] text-slate-500">EAC/Spinorama or manufacturer Klippel NFS data located</div></div><div class="bg-[#0d1118] border border-slate-800 rounded-lg p-3"><div class="text-slate-500">Primary measured datasets</div><div class="text-lg font-bold text-white">CTA-2034 / NFS</div><div class="text-[10px] text-slate-500">Where published; no synthetic polar curves</div></div><div class="bg-[#0d1118] border border-slate-800 rounded-lg p-3"><div class="text-slate-500">Subwoofer model</div><div class="text-lg font-bold text-amber-300" >RSL Speedwoofer 10S</div><div class="text-[10px] text-slate-500">Original single 10-inch powered subwoofer identified</div></div></div>
     <div class="overflow-x-auto"><table class="w-full min-w-[980px] text-[11px]"><thead class="text-slate-400 border-b border-slate-700"><tr><th class="p-2 text-left">Model / channels</th><th class="p-2 text-left">Manufacturer data</th><th class="p-2 text-left">Independent / measured data</th><th class="p-2 text-left">Evidence & source links</th><th class="p-2 text-left">Use in V10</th></tr></thead><tbody class="divide-y divide-slate-800">
@@ -566,7 +561,7 @@
     <div class="bg-[#0d1118] border border-slate-800 rounded-xl p-3 space-y-2"><h3 class="text-xs font-bold text-white">Measurement interpretation & data gaps</h3><ul class="list-disc pl-5 space-y-1 text-[11px] text-slate-400"><li>Preserve sensitivity test conditions: 2.83 V vs 1 W, distance, frequency averaging window, and anechoic vs in-room.</li><li>CTA-2034 curves (on-axis, listening window, early reflections, sound power, directivity indices) should drive directivity and room-interaction analysis—not a generic dispersion number alone.</li><li>Use impedance magnitude/phase for amplifier-load assessment; distortion and compression data for output/headroom. Do not infer these from nominal impedance or sensitivity.</li><li>Subwoofer model, exact THX-265B independent measurements, and machine-readable curve files remain acquisition tasks. Unknowns are never filled with proxy values.</li></ul><p class="text-[10px] text-slate-500">Evidence checked 20 Nov 2026. Manufacturer claims and independent results are shown separately.</p></div>
   </section>
 
-<section id="v10SystemElectronics" class="bg-[#11161f] border border-emerald-500/30 rounded-2xl p-4 lg:p-5 shadow-xl space-y-3">
+<section id="v10SystemElectronics" class="col-span-1 xl:col-span-12 min-w-0 w-full bg-[#11161f] border border-emerald-500/30 rounded-2xl p-4 lg:p-5 shadow-xl space-y-3">
   <div class="flex flex-wrap items-start justify-between gap-3"><div><div class="text-[10px] font-mono uppercase tracking-widest text-emerald-300">V10 • Actual system configuration</div><h2 class="text-lg font-bold text-white mt-1">AVR, external amplification & subwoofer topology</h2><p class="text-xs text-slate-400 mt-1">Current build is 7.1.4. A second identical subwoofer is an optional future state, not an assumed installed component.</p></div><span id="v10SystemModeBadge" class="text-[10px] rounded bg-emerald-500/10 border border-emerald-500/30 px-2 py-1 text-emerald-200">7.1.4 • 1 subwoofer</span></div>
   <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
     <div class="bg-[#0d1118] border border-slate-800 rounded-xl p-3"><div class="text-slate-500 uppercase tracking-wide text-[10px]">AV receiver / processor</div><div class="text-white font-bold mt-1">Onkyo TX-RZ50</div><div class="text-slate-300 mt-1">11.2-channel processing • 9 internal amplifier channels • 120 W/ch FTC rating (8 Ω, two channels driven) • dual subwoofer pre-outs</div><a class="text-cyan-300 underline inline-block mt-2" href="https://onkyo.com/receivers/tx-rz50" target="_blank" rel="noopener">Manufacturer specifications</a></div>
@@ -581,7 +576,7 @@
   <div class="bg-[#0d1118] border border-slate-800 rounded-xl p-3"><h3 class="text-xs font-bold text-white mb-2">Proposed 11-channel amplifier allocation</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px]"><div><div class="font-semibold text-cyan-300">TX-RZ50 internal amplification • 9 channels</div><p class="text-slate-300 mt-1">FL / C / FR • SL / SR • TFL / TFR / TRL / TRR</p></div><div><div class="font-semibold text-emerald-300">Fosi ZA3 external amplification • 2 channels</div><p class="text-slate-300 mt-1">SBL / SBR via surround-back pre-outs, ZA3 in stereo mode</p></div></div><p class="text-[10px] text-slate-500 mt-2">Confirm the TX-RZ50 amp-assign / speaker-terminal configuration against the exact regional manual and connect the matching surround-back pre-out pair. Set ZA3 gain consistently before level calibration; do not use mono mode for this two-channel assignment.</p></div>
 </section>
 
-<section id="v8Engineering" class="col-span-1 xl:col-span-12 mx-4 lg:mx-6 mb-6 bg-[#11161f] border border-indigo-500/30 rounded-2xl p-4 lg:p-5 shadow-xl space-y-4">
+<section id="v8Engineering" class="col-span-1 xl:col-span-12 min-w-0 w-full mb-6 bg-[#11161f] border border-indigo-500/30 rounded-2xl p-4 lg:p-5 shadow-xl space-y-4">
   <div class="flex flex-wrap items-start justify-between gap-3">
     <div><div class="flex items-center gap-2"><span class="text-[10px] font-mono uppercase tracking-widest text-indigo-300">V10 Engineering Suite</span><span class="text-[10px] rounded bg-indigo-500/15 border border-indigo-500/30 px-2 py-0.5 text-indigo-200">Supplemental validation</span></div>
       <h2 class="text-lg font-bold text-white mt-1">Tolerance & Acoustic Coverage Audit</h2>
@@ -3301,7 +3296,7 @@
                 },
                 {
                     title: '2. Overhead Atmos (.4) & Option 3 Edge-Clearance Proof',
-                    status: state.atmosMountOpt === 1 ? 'OPTION 1 CEILING DROP' : (state.atmosMountOpt === 2 ? 'OPTION 2 BULKHEAD FACE' : 'OPTION 3 SOFFIT MOUNT'),
+                    status: state.atmosMountOpt === 3 ? 'OPTION 3 SOFFIT MOUNT' : 'OPTION 1 CEILING DROP',
                     statusColor: 'text-cyan-400',
                     lines: [
                         `• Bulkhead Geometry: Z = ${arch.bhStart.toFixed(1)}" to ${arch.bhEnd.toFixed(1)}" (Span = ${arch.bhEffectiveSpan.toFixed(1)}"), Underside Soffit Y = ${arch.bhClearY.toFixed(1)}"`,
@@ -3677,7 +3672,7 @@
             const candidates = [];
 
             try {
-                [1, 2, 3].forEach(option => {
+                [1, 3].forEach(option => {
                     state.atmosMountOpt = option;
                     const candidateLayout = computeMethodologyLayout(state.standard);
                     const atmosChannels = candidateLayout.channels.filter(ch => ch.group === 'Atmos');
@@ -3777,9 +3772,9 @@
 
             const tfl = layout.channels.find(c => c.id === 'TFL');
             document.getElementById('hudModelName').textContent = STANDARDS[state.standard].fullTitle;
-            document.getElementById('hudMountLine').textContent = state.atmosMountOpt === 1
-                ? `Atmos: Option 1 Pyle 90° Perpendicular Drop Poles`
-                : (state.atmosMountOpt === 2 ? `Atmos: Option 2 Bulkhead Vertical Face` : `Atmos: Option 3 Soffit Bracket (${tfl.edgeDistNote})`);
+            document.getElementById('hudMountLine').textContent = state.atmosMountOpt === 3
+                ? `Atmos: Option 3 Soffit Bracket (${tfl.edgeDistNote})`
+                : `Atmos: Option 1 Pyle 90° Perpendicular Drop Poles`;
             document.getElementById('hudBedLine').textContent = `Bed: ${state.bedMountMode === 'stands' ? 'Floor Stands' : 'Wall-Mounted'} • HTM-200SE2 ${state.atmosOrient}`;
             document.getElementById('hudBeamLine').textContent = treatments.arch.beamCollision
                 ? `⚠ Beam (7"×8.5"): OVERLAPS SECTIONAL SOFA`
@@ -3899,8 +3894,9 @@
         }
 
         function setAtmosMountOption(opt) {
+            opt = Number(opt) === 3 ? 3 : 1;
             state.atmosMountOpt = opt;
-            [1, 2, 3].forEach(i => {
+            [1, 3].forEach(i => {
                 const btn = document.getElementById(`btnMountOpt${i}`);
                 btn.className = (i === opt)
                     ? 'p-2.5 rounded-xl border border-blue-500 bg-blue-600/20 text-left transition'
@@ -3909,7 +3905,6 @@
             document.getElementById('fsMountSelect').value = String(opt);
             const details = {
                 1: 'Option 1 mounts vertical drop poles at a strict 90° angle from the upper ceiling (Y=91.0"), anchoring securely to the center-back (rear) of the speaker cabinet with zero protrusion or clipping.',
-                2: 'Option 2 uses an outboard C-style bulkhead-face mount: the upper arm extends 4.5" away from the bulkhead before dropping into a vertical pole positioned outside each speaker. The speaker remains on the inboard / room-center side of the pole and connects at its center-rear mounting plate, independently aimed toward the MLP.',
                 3: 'Option 3 mounts swivel/tilt brackets to the flat underside soffit of the bulkhead (79.5"), allowing the mounting flange edge to sit as close as 1.0" from the front or rear bulkhead edge to best match the selected placement methodology.'
             };
             document.getElementById('mountOptionDetail').textContent = details[opt];
@@ -4126,7 +4121,7 @@ function v8ApplyConfig(cfg) {
  const s=cfg.state, numeric=['roomW','roomD','ceilH','mlpZ','earY'];
  numeric.forEach(k=>{if(!Number.isFinite(Number(s[k]))) throw new Error('Invalid numeric setting: '+k);});
  if(!V8_KEYS.includes(s.standard)) throw new Error('Unknown placement methodology.');
- Object.assign(state,{roomW:Number(s.roomW),roomD:Number(s.roomD),ceilH:Number(s.ceilH),mlpZ:Number(s.mlpZ),earY:Number(s.earY),standard:s.standard,ghostStandard:V8_KEYS.includes(s.ghostStandard)||s.ghostStandard==='none'?s.ghostStandard:'none',atmosOrient:s.atmosOrient==='vertical'?'vertical':'horizontal',atmosMountOpt:[1,2,3].includes(Number(s.atmosMountOpt))?Number(s.atmosMountOpt):1,bedMountMode:s.bedMountMode==='wall'?'wall':'stands',subCount:Number(s.subCount)===2?2:1});
+ Object.assign(state,{roomW:Number(s.roomW),roomD:Number(s.roomD),ceilH:Number(s.ceilH),mlpZ:Number(s.mlpZ),earY:Number(s.earY),standard:s.standard,ghostStandard:V8_KEYS.includes(s.ghostStandard)||s.ghostStandard==='none'?s.ghostStandard:'none',atmosOrient:s.atmosOrient==='vertical'?'vertical':'horizontal',atmosMountOpt:Number(s.atmosMountOpt)===3?3:1,bedMountMode:s.bedMountMode==='wall'?'wall':'stands',subCount:Number(s.subCount)===2?2:1});
  if(s.layers && typeof s.layers==='object') Object.keys(state.layers).forEach(k=>{if(typeof s.layers[k]==='boolean')state.layers[k]=s.layers[k];});
  const ids={roomW:'sliderRoomW',roomD:'sliderRoomD',ceilH:'sliderCeilH',mlpZ:'sliderMlpZ',earY:'sliderEarY'};
  Object.entries(ids).forEach(([k,id])=>{if(v8$(id))v8$(id).value=state[k];});
@@ -4162,7 +4157,7 @@ function v8CoverageAudit(layout){const seats=v8Inputs().seats,d=v8Inputs().direc
 function v8MethodologyAudit(){const original=state.standard;const results=[];try{for(const key of V8_KEYS){state.standard=key;const layout=computeMethodologyLayout(key);const treatments=computeAcousticTreatments(layout);const collisions=evaluateAllCollisions(layout,treatments);const atmos=layout.channels.filter(c=>c.group==='Atmos');const avg=atmos.reduce((a,c)=>a+c.elevDeg,0)/(atmos.length||1);results.push({key,title:STANDARDS[key].shortTitle,channels:layout.channels.length,atmosElev:avg,collisions:collisions.length,note:STANDARDS[key].desc});}}catch(e){results.push({key:'ERROR',title:'Comparison error',channels:0,atmosElev:NaN,collisions:0,note:e.message});}finally{state.standard=original;}
  const provenance={expert:'Expert-derived preset',dolby:'Published Dolby guidance preset',studio:'Expert / studio-derived preset',gurus:'Educator / expert-derived preset',advice:'Saved Audio Advice room layout',tah:'Third-party methodology preset',cedia:'Industry standard reference preset — verify current RP22 edition',trinnov:'Manufacturer / format hybrid preset'};
  v8$('v8MethodTable').innerHTML='<table class="w-full min-w-[680px]"><thead><tr class="text-slate-400 border-b border-slate-700"><th class="p-2 text-left">Preset</th><th class="p-2 text-left">Provenance label</th><th class="p-2">Channels</th><th class="p-2">Mean Atmos elev.</th><th class="p-2">Modeled conflicts</th></tr></thead><tbody>'+results.map(r=>'<tr class="border-b border-slate-800"><td class="p-2 font-semibold">'+v8Esc(r.title)+'</td><td class="p-2">'+v8Esc(provenance[r.key]||'Review')+'</td><td class="p-2 text-center">'+r.channels+'</td><td class="p-2 text-center">'+(Number.isFinite(r.atmosElev)?v8Fmt(r.atmosElev):'—')+'</td><td class="p-2 text-center '+(r.collisions?'text-amber-300':'text-emerald-300')+'">'+r.collisions+'</td></tr>').join('')+'</tbody></table>';return results;}
-function v8RunRegression(){const original={standard:state.standard,roomW:state.roomW,roomD:state.roomD,ceilH:state.ceilH,mlpZ:state.mlpZ,earY:state.earY,atmosMountOpt:state.atmosMountOpt,atmosOrient:state.atmosOrient};const tests=[];const inspect=(name)=>{try{const layout=computeMethodologyLayout(state.standard);const treatments=computeAcousticTreatments(layout);const collisions=evaluateAllCollisions(layout,treatments);const ids=layout.channels.map(c=>c.id);const finite=layout.channels.every(c=>[c.x,c.y,c.z,c.azDeg,c.elevDeg,c.dist3D].every(Number.isFinite));const expected=['FL','C','FR','SL','SR','SBL','SBR','TFL','TFR','TRL','TRR','SUB1'];if(state.subCount===2)expected.push('SUB2');const missing=expected.filter(id=>!ids.includes(id));const wrongSubCount=ids.includes('SUB2')!==(state.subCount===2);tests.push({name,pass:finite&&missing.length===0&&!wrongSubCount&&layout.channels.length===(state.subCount===2?13:12),detail:!finite?'Non-finite geometry':missing.length?'Missing: '+missing.join(', '):wrongSubCount?'Unexpected subwoofer topology':layout.channels.length+' modeled components; '+collisions.length+' modeled conflict(s)'});}catch(e){tests.push({name,pass:false,detail:'Exception: '+e.message});}};try{for(const key of V8_KEYS){state.standard=key;for(const mount of [1,2,3])for(const orient of ['horizontal','vertical']){state.atmosMountOpt=mount;state.atmosOrient=orient;inspect(STANDARDS[key].shortTitle+' / Mount '+mount+' / '+orient);}}state.standard='expert';for(const w of [180,276])for(const d of [180,264])for(const ceiling of [84,120]){state.roomW=w;state.roomD=d;state.ceilH=ceiling;inspect('Room boundary '+w+'×'+d+'×'+ceiling+' in');}}finally{Object.assign(state,original);updateAll();}const pass=tests.filter(t=>t.pass).length;v8$('v8RegressionStatus').textContent=pass+'/'+tests.length+' passed';v8$('v8RegressionStatus').className='text-xl font-bold mt-1 '+(pass===tests.length?'text-emerald-300':'text-red-300');v8$('v8RegressionSummary').textContent='Checks all methodologies × 3 mounts × 2 orientations plus 8 room-dimension boundary combinations. Modeled conflicts are reported, not treated as software failures.';v8$('v8RegressionTable').innerHTML='<div class="max-h-72 overflow-y-auto"><table class="w-full"><tbody>'+tests.map(t=>'<tr class="border-b border-slate-800"><td class="p-1">'+(t.pass?'✓':'✕')+' '+v8Esc(t.name)+'</td><td class="p-1 '+(t.pass?'text-emerald-300':'text-red-300')+'">'+v8Esc(t.detail)+'</td></tr>').join('')+'</tbody></table></div>';v8$('v8AuditLog').textContent='Last regression run: '+new Date().toLocaleString()+' • '+pass+'/'+tests.length+' passed.';return tests;}
+function v8RunRegression(){const original={standard:state.standard,roomW:state.roomW,roomD:state.roomD,ceilH:state.ceilH,mlpZ:state.mlpZ,earY:state.earY,atmosMountOpt:state.atmosMountOpt,atmosOrient:state.atmosOrient};const tests=[];const inspect=(name)=>{try{const layout=computeMethodologyLayout(state.standard);const treatments=computeAcousticTreatments(layout);const collisions=evaluateAllCollisions(layout,treatments);const ids=layout.channels.map(c=>c.id);const finite=layout.channels.every(c=>[c.x,c.y,c.z,c.azDeg,c.elevDeg,c.dist3D].every(Number.isFinite));const expected=['FL','C','FR','SL','SR','SBL','SBR','TFL','TFR','TRL','TRR','SUB1'];if(state.subCount===2)expected.push('SUB2');const missing=expected.filter(id=>!ids.includes(id));const wrongSubCount=ids.includes('SUB2')!==(state.subCount===2);tests.push({name,pass:finite&&missing.length===0&&!wrongSubCount&&layout.channels.length===(state.subCount===2?13:12),detail:!finite?'Non-finite geometry':missing.length?'Missing: '+missing.join(', '):wrongSubCount?'Unexpected subwoofer topology':layout.channels.length+' modeled components; '+collisions.length+' modeled conflict(s)'});}catch(e){tests.push({name,pass:false,detail:'Exception: '+e.message});}};try{for(const key of V8_KEYS){state.standard=key;for(const mount of [1,3])for(const orient of ['horizontal','vertical']){state.atmosMountOpt=mount;state.atmosOrient=orient;inspect(STANDARDS[key].shortTitle+' / Mount '+mount+' / '+orient);}}state.standard='expert';for(const w of [180,276])for(const d of [180,264])for(const ceiling of [84,120]){state.roomW=w;state.roomD=d;state.ceilH=ceiling;inspect('Room boundary '+w+'×'+d+'×'+ceiling+' in');}}finally{Object.assign(state,original);updateAll();}const pass=tests.filter(t=>t.pass).length;v8$('v8RegressionStatus').textContent=pass+'/'+tests.length+' passed';v8$('v8RegressionStatus').className='text-xl font-bold mt-1 '+(pass===tests.length?'text-emerald-300':'text-red-300');v8$('v8RegressionSummary').textContent='Checks all methodologies × 2 practical mounts (Options 1 and 3) × 2 orientations plus 8 room-dimension boundary combinations. Modeled conflicts are reported, not treated as software failures.';v8$('v8RegressionTable').innerHTML='<div class="max-h-72 overflow-y-auto"><table class="w-full"><tbody>'+tests.map(t=>'<tr class="border-b border-slate-800"><td class="p-1">'+(t.pass?'✓':'✕')+' '+v8Esc(t.name)+'</td><td class="p-1 '+(t.pass?'text-emerald-300':'text-red-300')+'">'+v8Esc(t.detail)+'</td></tr>').join('')+'</tbody></table></div>';v8$('v8AuditLog').textContent='Last regression run: '+new Date().toLocaleString()+' • '+pass+'/'+tests.length+' passed.';return tests;}
 function v8RunAll(){try{const layout=computeMethodologyLayout(state.standard),treatments=computeAcousticTreatments(layout),collisions=evaluateAllCollisions(layout,treatments);const tolerance=v8ToleranceAudit(layout),installation=v8InstallationAudit(layout,treatments,collisions),coverage=v8CoverageAudit(layout),methodologies=v8MethodologyAudit();v8LastAudit={at:new Date().toISOString(),standard:state.standard,collisions, tolerance,installation,coverage,methodologies};v8$('v8AuditLog').textContent='Last full audit: '+new Date().toLocaleString()+' • '+installation.length+' installation rows • '+coverage.length+' seat/channel estimates.';return v8LastAudit;}catch(e){v8$('v8InstallStatus').textContent='Audit error';v8$('v8InstallSummary').textContent=e.message;console.error('V8 audit failed',e);}}
 function v8RunAllAndRegression(){v8RunAll();v8RunRegression();}
 function v8PrintReport(){v8RunAll();window.print();}
