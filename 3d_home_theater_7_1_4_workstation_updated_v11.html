@@ -378,8 +378,8 @@
                         <div>
                             <label class="text-[10px] text-slate-400 block mb-1">Atmos Bulkhead Mount</label>
                             <select id="fsMountSelect" onchange="setAtmosMountOption(parseInt(this.value))" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
-                                <option value="1" selected>Opt 1: Pyle 90° Perpendicular Drop Poles</option>
-                                <option value="3">Opt 3: Soffit Bracket (Up to 1" Edge)</option>
+                                <option value="1">Option 1: Pyle 90° Perpendicular Drop Poles</option>
+                                <option value="2">Option 2: Soffit Swivel Bracket (Up to 1" Edge)</option>
                             </select>
                         </div>
                         <div class="grid grid-cols-2 gap-1.5">
@@ -1045,7 +1045,7 @@
                     width: 5.5, height: isSoffit ? 0.7 : 0.8, depth: 5.5
                 };
             } else {
-                // Option 2: C-style bulkhead-face support.
+                // Legacy Option 3: C-style bulkhead-face support (not exposed in current UI).
                 // The upper arm first projects 4.5" away from the bulkhead, then
                 // turns down into the main vertical pole. The pole is deliberately
                 // positioned OUTBOARD of the speaker (toward the nearest side wall),
@@ -1317,8 +1317,8 @@
                     poleLen = Math.max(0, anchorSurfaceY - (speakerY + cab.h / 2));
                     bracketType = 'Opt 1: Ceiling Drop Pole + External Center-Rear Bracket';
                     edgeDistNote = `${isFront ? (arch.bhStart - (poleTopZ + bracketHalfFootprint)).toFixed(1) : ((poleTopZ - bracketHalfFootprint) - arch.bhEnd).toFixed(1)}" flange-edge clearance from bulkhead`;
-                } else if (state.atmosMountOpt === 2) {
-                    // Face-mounted articulated bracket. Keep the speaker cabinet clear
+                } else if (state.atmosMountOpt === 3) {
+                    // Legacy C-arm geometry retained only for migration compatibility; active UI options are 1 and 2.
                     // of the bulkhead; the bracket renderer routes around the cabinet and
                     // outside the bulkhead edge before reaching the vertical-face flange.
                     anchorSurfaceY = arch.bhClearY + Math.min(state.bhDrop / 2, 5.5);
@@ -1342,7 +1342,7 @@
                     const faceMetrics = getAimedBoxMetrics(speakerX, speakerY, speakerZ, cab);
                     poleLen = Math.max(0, anchorSurfaceY - (speakerY + faceMetrics.halfY));
                     poleTopZ = isFront ? arch.bhStart : arch.bhEnd;
-                    bracketType = 'Opt 2: Outboard C-Arm + Inboard Center-Rear Speaker Mount';
+                    bracketType = 'Legacy Opt 3: Outboard C-Arm + Inboard Center-Rear Speaker Mount';
                     edgeDistNote = isFront ? 'Front vertical bulkhead face' : 'Rear vertical bulkhead face';
                 } else {
                     // Soffit bracket: solve for the actual center-rear attachment point,
@@ -1383,7 +1383,7 @@
                     const distRearEdge = arch.bhEnd - (poleTopZ + bracketHalfFootprint);
                     const minEdgeDist = Math.min(distFrontEdge, distRearEdge);
                     edgeDistNote = `Flange edge ${minEdgeDist.toFixed(2)}" from ${distFrontEdge < distRearEdge ? 'front' : 'rear'} bulkhead edge (≥1.0" required)`;
-                    bracketType = `Opt 3: Soffit Swivel Bracket + Center-Rear Drop (${edgeDistNote})`;
+                    bracketType = `Option 2: Soffit Swivel Bracket + Center-Rear Drop (${edgeDistNote})`;
                 }
 
                 const finalMetrics = getAimedBoxMetrics(speakerX, speakerY, speakerZ, cab);
@@ -3779,7 +3779,7 @@
             const best = candidates[0] || { option: 1, averageForeAftDeviation: null };
             const names = {
                 1: 'Pyle 90° Perpendicular Drop Poles',
-                3: 'Soffit Bracket'
+                2: 'Soffit Bracket'
             };
             return {
                 ...best,
@@ -4186,7 +4186,7 @@ function v8Inputs() {
  field:{substrate:v8$('v8Substrate')?.value||'',fastener:v8$('v8Fastener')?.value||'',holePattern:v8$('v8HolePattern')?.value||'',cableClear:v8$('v8CableClear')?.value||'',studVerified:!!v8$('v8StudVerified')?.checked,utilitiesChecked:!!v8$('v8UtilitiesChecked')?.checked,fastenerVerified:!!v8$('v8FastenerVerified')?.checked,drillVerified:!!v8$('v8DrillVerified')?.checked,cableVerified:!!v8$('v8CableVerified')?.checked},
  directivity:{horizontal:v8Num('v8DispH',90),vertical:v8Num('v8DispV',60),source:v8$('v8DispSource')?.value || ''} };
 }
-function v8Config() { return {schema:'home-theater-workstation-config',schemaVersion:1,workbookVersion:'V10',savedAt:new Date().toISOString(),state:{roomW:state.roomW,roomD:state.roomD,ceilH:state.ceilH,bhDrop:state.bhDrop,bhSpan:state.bhSpan,mlpZ:state.mlpZ,earY:state.earY,standard:state.standard,ghostStandard:state.ghostStandard,atmosOrient:state.atmosOrient,atmosMountOpt:state.atmosMountOpt,bedMountMode:state.bedMountMode,subCount:state.subCount,recessedLightsOn:state.recessedLightsOn,layers:{...state.layers}},v8:v8Inputs()}; }
+function v8Config() { return {schema:'home-theater-workstation-config',schemaVersion:1,workbookVersion:'V11',savedAt:new Date().toISOString(),state:{roomW:state.roomW,roomD:state.roomD,ceilH:state.ceilH,bhDrop:state.bhDrop,bhSpan:state.bhSpan,mlpZ:state.mlpZ,earY:state.earY,standard:state.standard,ghostStandard:state.ghostStandard,atmosOrient:state.atmosOrient,atmosMountOpt:state.atmosMountOpt,bedMountMode:state.bedMountMode,subCount:state.subCount,recessedLightsOn:state.recessedLightsOn,layers:{...state.layers}},v8:v8Inputs()}; }
 function v8ApplyConfig(cfg) {
  if(!cfg || cfg.schema!=='home-theater-workstation-config' || !cfg.state) throw new Error('This is not a supported Home Theater configuration JSON.');
  const s=cfg.state, numeric=['roomW','roomD','ceilH','mlpZ','earY'];
