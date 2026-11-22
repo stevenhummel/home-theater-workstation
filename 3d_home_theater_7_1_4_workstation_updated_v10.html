@@ -174,8 +174,8 @@
                         <div class="text-xs font-bold text-white">Option 1</div>
                         <div class="text-[10px] text-blue-300 leading-tight mt-0.5">Pyle 90° Perpendicular Drop Poles</div>
                     </button>
-                    <button id="btnMountOpt3" onclick="setAtmosMountOption(3)" class="p-2.5 rounded-xl border border-slate-800 bg-[#0d1118] hover:border-slate-700 text-left transition">
-                        <div class="text-xs font-bold text-slate-200">Option 3</div>
+                    <button id="btnMountOpt2" onclick="setAtmosMountOption(2)" class="p-2.5 rounded-xl border border-slate-800 bg-[#0d1118] hover:border-slate-700 text-left transition">
+                        <div class="text-xs font-bold text-slate-200">Option 2</div>
                         <div class="text-[10px] text-slate-400 leading-tight mt-0.5">Soffit Bracket (Up to 1" Edge)</div>
                     </button>
                 </div>
@@ -536,7 +536,7 @@
                             <i class="fa-solid fa-square-root-variable text-cyan-400"></i>
                             <span>Geometric Proof & Acoustic Calculation Audit (All 8 Methodologies)</span>
                         </h2>
-                        <p class="text-xs text-slate-400">Live mathematical proofing of speaker coordinates, Euclidean 3D distances, elevation/azimuth angles, specular reflection points, bass traps, and Option 3 bulkhead edge clearances</p>
+                        <p class="text-xs text-slate-400">Live mathematical proofing of speaker coordinates, Euclidean 3D distances, elevation/azimuth angles, specular reflection points, bass traps, and Option 2 bulkhead edge clearances</p>
                     </div>
                     <span id="proofBadge" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/40 font-mono text-xs text-emerald-300 font-semibold">100% Geometrically Verified</span>
                 </div>
@@ -680,7 +680,7 @@
             ghostStandard: 'none',
             atmosOrient: 'horizontal',
             atmosMountOpt: 1,
-            bedMountMode: 'stands',
+            bedMountMode: 'wall',
             subCount: 1,
             showViolations: true,
             recessedLightsOn: true,
@@ -909,7 +909,7 @@
             const rearPad = center.clone()
                 .add(metrics.rearOffset)
                 .addScaledVector(metrics.rearNormal, 0.55);
-            const radius = state.atmosMountOpt === 1 ? 0.68 : (state.atmosMountOpt === 3 ? 0.55 : 0.48);
+            const radius = state.atmosMountOpt === 1 ? 0.68 : (state.atmosMountOpt === 2 ? 0.55 : 0.48);
             const sampleCount = (a, b, r) => Math.max(24, Math.ceil(a.distanceTo(b) / Math.max(0.12, r * 0.5)));
 
             const segmentClearsCabinet = (a, b, r) => {
@@ -941,8 +941,8 @@
             let valid = true;
             let reason = '';
 
-            if (state.atmosMountOpt === 1 || state.atmosMountOpt === 3) {
-                const isSoffit = state.atmosMountOpt === 3;
+            if (state.atmosMountOpt === 1 || state.atmosMountOpt === 2) {
+                const isSoffit = state.atmosMountOpt === 2;
                 const flangeY = isSoffit ? arch.bhClearY - 0.35 : state.ceilH - 0.4;
                 const poleEndY = flangeY - (isSoffit ? 0.35 : 0.4);
                 let escape = null;
@@ -1038,7 +1038,7 @@
             }
 
             // Validate the actual flange footprint as well as the connecting rods.
-            // Option 1 sits flush to the upper ceiling outside the bulkhead; Option 3 sits
+            // Option 1 sits flush to the upper ceiling outside the bulkhead; Option 2 sits
             // flush to the soffit underside inside its perimeter; Option 2 sits flush to
             // the external vertical face of the bulkhead.
             if (flange) {
@@ -1057,7 +1057,7 @@
                         valid = false;
                         reason = reason || 'Ceiling flange overlaps or approaches the bulkhead edge';
                     }
-                } else if (state.atmosMountOpt === 3) {
+                } else if (state.atmosMountOpt === 2) {
                     const frontClear = (flange.position.z - halfFlangeZ) - arch.bhStart;
                     const rearClear = arch.bhEnd - (flange.position.z + halfFlangeZ);
                     if (frontClear < 0.95 || rearClear < 0.95) {
@@ -1109,7 +1109,7 @@
             let standardNote = '';
 
             // Effective vertical height reference depending on mount option
-            const refVerticalH = state.atmosMountOpt === 3 ? (soffitEarToCeil - 2.0 - cab.h / 2) : (upperEarToCeil - state.bhDrop - 4.5 - cab.h / 2);
+            const refVerticalH = state.atmosMountOpt === 2 ? (soffitEarToCeil - 2.0 - cab.h / 2) : (upperEarToCeil - state.bhDrop - 4.5 - cab.h / 2);
 
             switch (stdKey) {
                 case 'expert':
@@ -3295,8 +3295,8 @@
                     ]
                 },
                 {
-                    title: '2. Overhead Atmos (.4) & Option 3 Edge-Clearance Proof',
-                    status: state.atmosMountOpt === 3 ? 'OPTION 3 SOFFIT MOUNT' : 'OPTION 1 CEILING DROP',
+                    title: '2. Overhead Atmos (.4) & Option 2 Edge-Clearance Proof',
+                    status: state.atmosMountOpt === 2 ? 'OPTION 2 SOFFIT MOUNT' : 'OPTION 1 CEILING DROP',
                     statusColor: 'text-cyan-400',
                     lines: [
                         `• Bulkhead Geometry: Z = ${arch.bhStart.toFixed(1)}" to ${arch.bhEnd.toFixed(1)}" (Span = ${arch.bhEffectiveSpan.toFixed(1)}"), Underside Soffit Y = ${arch.bhClearY.toFixed(1)}"`,
@@ -3414,8 +3414,8 @@
                 },
                 {
                     icon: 'fa-cloud-arrow-down text-emerald-400',
-                    title: state.atmosMountOpt === 3 ? '4× Overhead Atmos (Option 3 Edge-Tuned Soffit Mount)' : '4× Overhead Atmos (Option 1 Pyle 90° Drop Poles)',
-                    body: state.atmosMountOpt === 3
+                    title: state.atmosMountOpt === 2 ? '4× Overhead Atmos (Option 2 Edge-Tuned Soffit Mount)' : '4× Overhead Atmos (Option 1 Pyle 90° Drop Poles)',
+                    body: state.atmosMountOpt === 2
                         ? `Mounted to the bulkhead soffit (79.5") with mounting flange edge permitted up to 1.0" from the front/rear bulkhead edges (${tfl.edgeDistNote}), optimizing methodology elevation (${tfl.elevDeg.toFixed(1)}°) while aiming directly at the MLP.`
                         : `Oriented ${state.atmosOrient}ly (${getAtmosCabinetDims().label}) at ${tfl.elevDeg.toFixed(1)}° elevation. Attached via Option 1 vertical drop poles at 90° from the upper ceiling (Y=91.0"), mounting strictly to the center-back (rear) of the speaker cabinet.`
                 },
@@ -3672,7 +3672,7 @@
             const candidates = [];
 
             try {
-                [1, 3].forEach(option => {
+                [1, 2].forEach(option => {
                     state.atmosMountOpt = option;
                     const candidateLayout = computeMethodologyLayout(state.standard);
                     const atmosChannels = candidateLayout.channels.filter(ch => ch.group === 'Atmos');
@@ -3771,8 +3771,8 @@
 
             const tfl = layout.channels.find(c => c.id === 'TFL');
             document.getElementById('hudModelName').textContent = STANDARDS[state.standard].fullTitle;
-            document.getElementById('hudMountLine').textContent = state.atmosMountOpt === 3
-                ? `Atmos: Option 3 Soffit Bracket (${tfl.edgeDistNote})`
+            document.getElementById('hudMountLine').textContent = state.atmosMountOpt === 2
+                ? `Atmos: Option 2 Soffit Bracket (${tfl.edgeDistNote})`
                 : `Atmos: Option 1 Pyle 90° Perpendicular Drop Poles`;
             document.getElementById('hudBedLine').textContent = `Bed: ${state.bedMountMode === 'stands' ? 'Floor Stands' : 'Wall-Mounted'} • HTM-200SE2 ${state.atmosOrient}`;
             document.getElementById('hudBeamLine').textContent = treatments.arch.beamCollision
@@ -3893,9 +3893,9 @@
         }
 
         function setAtmosMountOption(opt) {
-            opt = Number(opt) === 3 ? 3 : 1;
+            opt = Number(opt) === 2 ? 2 : 1;
             state.atmosMountOpt = opt;
-            [1, 3].forEach(i => {
+            [1, 2].forEach(i => {
                 const btn = document.getElementById(`btnMountOpt${i}`);
                 btn.className = (i === opt)
                     ? 'p-2.5 rounded-xl border border-blue-500 bg-blue-600/20 text-left transition'
@@ -3904,7 +3904,7 @@
             document.getElementById('fsMountSelect').value = String(opt);
             const details = {
                 1: 'Option 1 mounts vertical drop poles at a strict 90° angle from the upper ceiling (Y=91.0"), anchoring securely to the center-back (rear) of the speaker cabinet with zero protrusion or clipping.',
-                3: 'Option 3 mounts swivel/tilt brackets to the flat underside soffit of the bulkhead (79.5"), allowing the mounting flange edge to sit as close as 1.0" from the front or rear bulkhead edge to best match the selected placement methodology.'
+                2: 'Option 2 mounts swivel/tilt brackets to the flat underside soffit of the bulkhead (79.5"), allowing the mounting flange edge to sit as close as 1.0" from the front or rear bulkhead edge to best match the selected placement methodology.'
             };
             document.getElementById('mountOptionDetail').textContent = details[opt];
             updateAll();
@@ -4120,7 +4120,7 @@ function v8ApplyConfig(cfg) {
  const s=cfg.state, numeric=['roomW','roomD','ceilH','mlpZ','earY'];
  numeric.forEach(k=>{if(!Number.isFinite(Number(s[k]))) throw new Error('Invalid numeric setting: '+k);});
  if(!V8_KEYS.includes(s.standard)) throw new Error('Unknown placement methodology.');
- Object.assign(state,{roomW:Number(s.roomW),roomD:Number(s.roomD),ceilH:Number(s.ceilH),mlpZ:Number(s.mlpZ),earY:Number(s.earY),standard:s.standard,ghostStandard:V8_KEYS.includes(s.ghostStandard)||s.ghostStandard==='none'?s.ghostStandard:'none',atmosOrient:s.atmosOrient==='vertical'?'vertical':'horizontal',atmosMountOpt:Number(s.atmosMountOpt)===3?3:1,bedMountMode:s.bedMountMode==='wall'?'wall':'stands',subCount:Number(s.subCount)===2?2:1});
+ Object.assign(state,{roomW:Number(s.roomW),roomD:Number(s.roomD),ceilH:Number(s.ceilH),mlpZ:Number(s.mlpZ),earY:Number(s.earY),standard:s.standard,ghostStandard:V8_KEYS.includes(s.ghostStandard)||s.ghostStandard==='none'?s.ghostStandard:'none',atmosOrient:s.atmosOrient==='vertical'?'vertical':'horizontal',atmosMountOpt:(Number(s.atmosMountOpt)===3||Number(s.atmosMountOpt)===2)?2:1,bedMountMode:s.bedMountMode==='stands'?'stands':'wall',subCount:Number(s.subCount)===2?2:1});
  if(s.layers && typeof s.layers==='object') Object.keys(state.layers).forEach(k=>{if(typeof s.layers[k]==='boolean')state.layers[k]=s.layers[k];});
  const ids={roomW:'sliderRoomW',roomD:'sliderRoomD',ceilH:'sliderCeilH',mlpZ:'sliderMlpZ',earY:'sliderEarY'};
  Object.entries(ids).forEach(([k,id])=>{if(v8$(id))v8$(id).value=state[k];});
@@ -4156,7 +4156,7 @@ function v8CoverageAudit(layout){const seats=v8Inputs().seats,d=v8Inputs().direc
 function v8MethodologyAudit(){const original=state.standard;const results=[];try{for(const key of V8_KEYS){state.standard=key;const layout=computeMethodologyLayout(key);const treatments=computeAcousticTreatments(layout);const collisions=evaluateAllCollisions(layout,treatments);const atmos=layout.channels.filter(c=>c.group==='Atmos');const avg=atmos.reduce((a,c)=>a+c.elevDeg,0)/(atmos.length||1);results.push({key,title:STANDARDS[key].shortTitle,channels:layout.channels.length,atmosElev:avg,collisions:collisions.length,note:STANDARDS[key].desc});}}catch(e){results.push({key:'ERROR',title:'Comparison error',channels:0,atmosElev:NaN,collisions:0,note:e.message});}finally{state.standard=original;}
  const provenance={expert:'Expert-derived preset',dolby:'Published Dolby guidance preset',studio:'Expert / studio-derived preset',gurus:'Educator / expert-derived preset',advice:'Saved Audio Advice room layout',tah:'Third-party methodology preset',cedia:'Industry standard reference preset — verify current RP22 edition',trinnov:'Manufacturer / format hybrid preset'};
  v8$('v8MethodTable').innerHTML='<table class="w-full min-w-[680px]"><thead><tr class="text-slate-400 border-b border-slate-700"><th class="p-2 text-left">Preset</th><th class="p-2 text-left">Provenance label</th><th class="p-2">Channels</th><th class="p-2">Mean Atmos elev.</th><th class="p-2">Modeled conflicts</th></tr></thead><tbody>'+results.map(r=>'<tr class="border-b border-slate-800"><td class="p-2 font-semibold">'+v8Esc(r.title)+'</td><td class="p-2">'+v8Esc(provenance[r.key]||'Review')+'</td><td class="p-2 text-center">'+r.channels+'</td><td class="p-2 text-center">'+(Number.isFinite(r.atmosElev)?v8Fmt(r.atmosElev):'—')+'</td><td class="p-2 text-center '+(r.collisions?'text-amber-300':'text-emerald-300')+'">'+r.collisions+'</td></tr>').join('')+'</tbody></table>';return results;}
-function v8RunRegression(){const original={standard:state.standard,roomW:state.roomW,roomD:state.roomD,ceilH:state.ceilH,mlpZ:state.mlpZ,earY:state.earY,atmosMountOpt:state.atmosMountOpt,atmosOrient:state.atmosOrient};const tests=[];const inspect=(name)=>{try{const layout=computeMethodologyLayout(state.standard);const treatments=computeAcousticTreatments(layout);const collisions=evaluateAllCollisions(layout,treatments);const ids=layout.channels.map(c=>c.id);const finite=layout.channels.every(c=>[c.x,c.y,c.z,c.azDeg,c.elevDeg,c.dist3D].every(Number.isFinite));const expected=['FL','C','FR','SL','SR','SBL','SBR','TFL','TFR','TRL','TRR','SUB1'];if(state.subCount===2)expected.push('SUB2');const missing=expected.filter(id=>!ids.includes(id));const wrongSubCount=ids.includes('SUB2')!==(state.subCount===2);tests.push({name,pass:finite&&missing.length===0&&!wrongSubCount&&layout.channels.length===(state.subCount===2?13:12),detail:!finite?'Non-finite geometry':missing.length?'Missing: '+missing.join(', '):wrongSubCount?'Unexpected subwoofer topology':layout.channels.length+' modeled components; '+collisions.length+' modeled conflict(s)'});}catch(e){tests.push({name,pass:false,detail:'Exception: '+e.message});}};try{for(const key of V8_KEYS){state.standard=key;for(const mount of [1,3])for(const orient of ['horizontal','vertical']){state.atmosMountOpt=mount;state.atmosOrient=orient;inspect(STANDARDS[key].shortTitle+' / Mount '+mount+' / '+orient);}}state.standard='expert';for(const w of [180,276])for(const d of [180,264])for(const ceiling of [84,120]){state.roomW=w;state.roomD=d;state.ceilH=ceiling;inspect('Room boundary '+w+'×'+d+'×'+ceiling+' in');}}finally{Object.assign(state,original);updateAll();}const pass=tests.filter(t=>t.pass).length;v8$('v8RegressionStatus').textContent=pass+'/'+tests.length+' passed';v8$('v8RegressionStatus').className='text-xl font-bold mt-1 '+(pass===tests.length?'text-emerald-300':'text-red-300');v8$('v8RegressionSummary').textContent='Checks all methodologies × 2 practical mounts (Options 1 and 3) × 2 orientations plus 8 room-dimension boundary combinations. Modeled conflicts are reported, not treated as software failures.';v8$('v8RegressionTable').innerHTML='<div class="max-h-72 overflow-y-auto"><table class="w-full"><tbody>'+tests.map(t=>'<tr class="border-b border-slate-800"><td class="p-1">'+(t.pass?'✓':'✕')+' '+v8Esc(t.name)+'</td><td class="p-1 '+(t.pass?'text-emerald-300':'text-red-300')+'">'+v8Esc(t.detail)+'</td></tr>').join('')+'</tbody></table></div>';v8$('v8AuditLog').textContent='Last regression run: '+new Date().toLocaleString()+' • '+pass+'/'+tests.length+' passed.';return tests;}
+function v8RunRegression(){const original={standard:state.standard,roomW:state.roomW,roomD:state.roomD,ceilH:state.ceilH,mlpZ:state.mlpZ,earY:state.earY,atmosMountOpt:state.atmosMountOpt,atmosOrient:state.atmosOrient};const tests=[];const inspect=(name)=>{try{const layout=computeMethodologyLayout(state.standard);const treatments=computeAcousticTreatments(layout);const collisions=evaluateAllCollisions(layout,treatments);const ids=layout.channels.map(c=>c.id);const finite=layout.channels.every(c=>[c.x,c.y,c.z,c.azDeg,c.elevDeg,c.dist3D].every(Number.isFinite));const expected=['FL','C','FR','SL','SR','SBL','SBR','TFL','TFR','TRL','TRR','SUB1'];if(state.subCount===2)expected.push('SUB2');const missing=expected.filter(id=>!ids.includes(id));const wrongSubCount=ids.includes('SUB2')!==(state.subCount===2);tests.push({name,pass:finite&&missing.length===0&&!wrongSubCount&&layout.channels.length===(state.subCount===2?13:12),detail:!finite?'Non-finite geometry':missing.length?'Missing: '+missing.join(', '):wrongSubCount?'Unexpected subwoofer topology':layout.channels.length+' modeled components; '+collisions.length+' modeled conflict(s)'});}catch(e){tests.push({name,pass:false,detail:'Exception: '+e.message});}};try{for(const key of V8_KEYS){state.standard=key;for(const mount of [1,2])for(const orient of ['horizontal','vertical']){state.atmosMountOpt=mount;state.atmosOrient=orient;inspect(STANDARDS[key].shortTitle+' / Mount '+mount+' / '+orient);}}state.standard='expert';for(const w of [180,276])for(const d of [180,264])for(const ceiling of [84,120]){state.roomW=w;state.roomD=d;state.ceilH=ceiling;inspect('Room boundary '+w+'×'+d+'×'+ceiling+' in');}}finally{Object.assign(state,original);updateAll();}const pass=tests.filter(t=>t.pass).length;v8$('v8RegressionStatus').textContent=pass+'/'+tests.length+' passed';v8$('v8RegressionStatus').className='text-xl font-bold mt-1 '+(pass===tests.length?'text-emerald-300':'text-red-300');v8$('v8RegressionSummary').textContent='Checks all methodologies × 2 practical mounts (Options 1 and 3) × 2 orientations plus 8 room-dimension boundary combinations. Modeled conflicts are reported, not treated as software failures.';v8$('v8RegressionTable').innerHTML='<div class="max-h-72 overflow-y-auto"><table class="w-full"><tbody>'+tests.map(t=>'<tr class="border-b border-slate-800"><td class="p-1">'+(t.pass?'✓':'✕')+' '+v8Esc(t.name)+'</td><td class="p-1 '+(t.pass?'text-emerald-300':'text-red-300')+'">'+v8Esc(t.detail)+'</td></tr>').join('')+'</tbody></table></div>';v8$('v8AuditLog').textContent='Last regression run: '+new Date().toLocaleString()+' • '+pass+'/'+tests.length+' passed.';return tests;}
 function v8RunAll(){try{const layout=computeMethodologyLayout(state.standard),treatments=computeAcousticTreatments(layout),collisions=evaluateAllCollisions(layout,treatments);const tolerance=v8ToleranceAudit(layout),installation=v8InstallationAudit(layout,treatments,collisions),coverage=v8CoverageAudit(layout),methodologies=v8MethodologyAudit();v8LastAudit={at:new Date().toISOString(),standard:state.standard,collisions, tolerance,installation,coverage,methodologies};v8$('v8AuditLog').textContent='Last full audit: '+new Date().toLocaleString()+' • '+installation.length+' installation rows • '+coverage.length+' seat/channel estimates.';return v8LastAudit;}catch(e){v8$('v8InstallStatus').textContent='Audit error';v8$('v8InstallSummary').textContent=e.message;console.error('V8 audit failed',e);}}
 function v8RunAllAndRegression(){v8RunAll();v8RunRegression();}
 function v8PrintReport(){v8RunAll();window.print();}
