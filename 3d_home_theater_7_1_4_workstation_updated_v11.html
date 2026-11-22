@@ -1447,6 +1447,17 @@
                     const waliMinReach = 5.31;
                     if (currentWallGap < waliMinReach) z -= (waliMinReach - currentWallGap);
                 }
+                // Maintain 3.0-inch clear gap from side-surround cabinet to side wall.
+                // Solve from the aimed cabinet envelope so toe-in is included.
+                if (state.bedMountMode === 'wall' && (id === 'SL' || id === 'SR')) {
+                    const sideSign = id === 'SL' ? -1 : 1;
+                    for (let i = 0; i < 8; i++) {
+                        const m = getAimedBoxMetrics(x, y, z, { w, h, d });
+                        const nextX = sideSign * (state.roomW / 2 - 0.4 - 3.0 - m.halfX);
+                        if (Math.abs(nextX - x) < 0.005) { x = nextX; break; }
+                        x = nextX;
+                    }
+                }
                 const dx = 0 - x;
                 const dy = earY - y;
                 const dz = mlpZ - z;
@@ -1472,7 +1483,7 @@
                 : `WALI SWM201 side-clamping wall mount (9.5" max tray width; 5.31"–11.22" adjustable reach; tweeter @ ${lcrTweeterY.toFixed(1)}")`;
             const surMount = state.bedMountMode === 'stands'
                 ? `36" Steel Floor Stand (Grounded Y=0, Tweeter @ ${surroundTweeterY.toFixed(1)}")`
-                : `WALI SWM201 for rear surrounds; articulating wall bracket for side surrounds (Tweeter @ ${surroundTweeterY.toFixed(1)}")`;
+                : `WALI SWM201 for rear surrounds; articulating wall bracket for side surrounds with 3.0-inch cabinet-to-wall offset (Tweeter @ ${surroundTweeterY.toFixed(1)}")`;
 
             const channels = [
                 buildBedChannel('FL', 'Front Left Main', 'LCR', 'Monolith THX-365T', -mainHalfSpan, lcrTweeterY, 13.0, 9.4, 18.9, 10.6, lcrMount),
@@ -3093,6 +3104,39 @@
                         flange.receiveShadow = true;
                         speakerMountAssembly.add(flange);
                     }
+                    // Horizontal Atmos Option 2 adapter: compact MI-SB03-style dual-axis
+                    // hinge with 8.5-inch slotted mending plate and three-washer standoffs.
+                    // Illustrative geometry; verify real plate pattern/clearances before install.
+                    if (state.atmosMountOpt === 2 && state.atmosOrient === 'horizontal') {
+                        const adapterMat = new THREE.MeshStandardMaterial({ color: 0x171a1f, metalness: 0.78, roughness: 0.38 });
+                        const rearZ = -(ch.dims.d / 2 + 0.16);
+                        const mending = new THREE.Mesh(new THREE.BoxGeometry(8.5, 1.15, 0.125), adapterMat);
+                        mending.position.set(0, 0, rearZ); mending.castShadow = true; spkGroup.add(mending);
+                        [-3.25, 3.25].forEach(xw => {
+                            for (let wi = 0; wi < 3; wi++) {
+                                const washer = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.045, 32), adapterMat);
+                                washer.rotation.x = Math.PI / 2; washer.position.set(xw, 0, rearZ - 0.10 - wi * 0.045);
+                                washer.castShadow = true; spkGroup.add(washer);
+                            }
+                            const bolt = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.55, 16), adapterMat);
+                            bolt.rotation.x = Math.PI / 2; bolt.position.set(xw, 0, rearZ - 0.28); spkGroup.add(bolt);
+                        });
+                        const centerBolt = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.38, 20), adapterMat);
+                        centerBolt.rotation.x = Math.PI / 2; centerBolt.position.set(0, 0, rearZ - 0.30); spkGroup.add(centerBolt);
+                        const speakerPlate = new THREE.Mesh(new THREE.BoxGeometry(3.2, 2.6, 0.18), adapterMat);
+                        speakerPlate.position.set(0, 0, rearZ - 0.42); speakerPlate.castShadow = true; spkGroup.add(speakerPlate);
+                        const hinge = new THREE.Mesh(new THREE.BoxGeometry(1.55, 1.7, 1.15), adapterMat);
+                        hinge.position.set(0, 0, rearZ - 1.15); hinge.castShadow = true; spkGroup.add(hinge);
+                        const pivot = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 1.8, 24), adapterMat);
+                        pivot.rotation.z = Math.PI / 2; pivot.position.set(0, 0.15, rearZ - 1.10); spkGroup.add(pivot);
+                        const cableCurve = new THREE.CatmullRomCurve3([
+                            new THREE.Vector3(1.0, 0.8, rearZ - 0.7), new THREE.Vector3(1.45, 1.0, rearZ - 1.0),
+                            new THREE.Vector3(1.45, 0.55, rearZ - 1.5), new THREE.Vector3(0.9, 0.35, rearZ - 1.4)
+                        ]);
+                        const cable = new THREE.Mesh(new THREE.TubeGeometry(cableCurve, 24, 0.035, 8, false),
+                            new THREE.MeshStandardMaterial({ color: 0x8b929a, metalness: 0.8, roughness: 0.32 }));
+                        spkGroup.add(cable);
+                    }
                 }
 
                 if (state.layers.sightlines && ch.group !== 'Sub') {
@@ -3976,7 +4020,7 @@
             document.getElementById('fsMountSelect').value = String(opt);
             const details = {
                 1: 'Option 1 mounts vertical drop poles at a strict 90° angle from the upper ceiling (Y=91.0"), anchoring securely to the center-back (rear) of the speaker cabinet with zero protrusion or clipping.',
-                2: 'Option 2 mounts swivel/tilt brackets to the flat underside soffit of the bulkhead (79.5"), allowing the mounting flange edge to sit as close as 1.0" from the front or rear bulkhead edge to best match the selected placement methodology.'
+                2: 'Option 2 uses the Mount-It! MI-SB03 compact dual-axis ceiling bracket with a custom 8.5-inch slotted mending-plate adapter and three-washer standoff stacks for horizontal HTM-200SE2 mounting. Confirm the supplied bracket plate pattern and clearances before installation.'
             };
             document.getElementById('mountOptionDetail').textContent = details[opt];
             updateAll();
