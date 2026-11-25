@@ -1268,11 +1268,11 @@
                     sideZ = mlpZ;
                     // Rear surrounds sit behind the listening-area boundary and flank the 48-inch French-door opening.
                     // Their lateral coordinate is recalculated from the live MLP-to-rear-speaker depth
-                    // to keep a rear-quadrant (~150° center-seat azimuth) target where room width allows.
+                    // to keep a rear-quadrant (~145° center-seat azimuth) target where room width allows.
                     // The French-door clearance is a hard minimum; the side-wall envelope is the hard maximum.
                     const rp22RearSpeakerZ = state.roomD - 9.0; // existing wall-mount datum; WALI reach correction remains in buildBedChannel()
                     const rp22RearDepth = Math.max(1, rp22RearSpeakerZ - mlpZ);
-                    const rp22RearAzimuthTarget = 150.0;
+                    const rp22RearAzimuthTarget = 145.0;
                     const rp22RearXForAzimuth = rp22RearDepth * Math.tan(THREE.MathUtils.degToRad(180 - rp22RearAzimuthTarget));
                     rearHalfSpan = Math.max(ARCH.rearDoorW / 2 + 18, Math.min(halfW - 16, rp22RearXForAzimuth));
                     // RP22 upper-layer guidance: front pair forward of listening area, rear pair behind;
