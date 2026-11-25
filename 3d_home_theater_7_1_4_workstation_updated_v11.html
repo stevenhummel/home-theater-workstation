@@ -1224,13 +1224,14 @@
             switch (stdKey) {
                 case 'expert':
                     mainHalfSpan = Math.min(halfW - 18, mlpZ * Math.tan(THREE.MathUtils.degToRad(28.5)));
-                    sideZ = mlpZ + 5;
+                    // 7.1.4 side-surround target: 93° from the MLP, calculated from the actual acoustic-center lateral distance.
+                    sideZ = mlpZ + (halfW - 6.5) * Math.tan(THREE.MathUtils.degToRad(3));
                     rearHalfSpan = Math.max(ARCH.rearDoorW / 2 + 18, Math.min(halfW - 24, (state.roomD - mlpZ) * 0.56));
                     atmosHalfX = 36;
                     targetElevDeg = 48.0;
                     tfZ = mlpZ - refVerticalH / Math.tan(THREE.MathUtils.degToRad(targetElevDeg));
                     trZ = mlpZ + refVerticalH / Math.tan(THREE.MathUtils.degToRad(targetElevDeg));
-                    standardNote = 'Adaptive Expert Master: 48° overhead design target. Active listening-priority profile applies weighted three-seat geometric optimization while retaining MLP-biased aiming.';
+                    standardNote = 'Adaptive Expert Master for 7.1.4: 93° side-surround MLP target with dedicated rear-surround channels, 48° overhead design target, and weighted three-seat geometric optimization. Side-surround placement is evaluated separately from the rear-surround target.';
                     break;
                 case 'dolby':
                     mainHalfSpan = Math.min(halfW - 16, mlpZ * Math.tan(THREE.MathUtils.degToRad(27)));
@@ -1631,7 +1632,7 @@
                     if (ch.group === 'Sub') return;
                     let targetAz = null, targetElev = null;
                     if (ch.id === 'FL' || ch.id === 'FR') targetAz = 28.5;
-                    else if (ch.id === 'SL' || ch.id === 'SR') targetAz = 90;
+                    else if (ch.id === 'SL' || ch.id === 'SR') targetAz = 93;
                     else if (ch.id === 'SBL' || ch.id === 'SBR') targetAz = 145;
                     else if (ch.id.startsWith('TF')) { targetAz = 45; targetElev = 48; }
                     else if (ch.id.startsWith('TR')) { targetAz = 135; targetElev = 48; }
