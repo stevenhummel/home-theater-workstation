@@ -2010,6 +2010,8 @@
         let scene, camera, renderer, controls;
         let rootGroup, spriteGroup, lightPoolGroup;
         let hemiLight, keyLight, screenGlow, rearFill;
+        let methodologyTransitionFrom = null;
+        let methodologyTransitionTimer = null;
         let isFullscreen = false;
         let isMlpPOV = false;
 
@@ -2444,7 +2446,7 @@
             return grp;
         }
 
-        function rebuild3DScene(activeLayout, ghostLayout, treatments, collisions) {
+        function rebuild3DScene(activeLayout, ghostLayout, treatments, collisions, transitionFromLayout = null) {
             // Build all geometry in front-wall-relative local coordinates first.
             // Apply the fixed-rear-wall translation only after the complete scene is built.
             rootGroup.position.set(0, 0, 0);
@@ -3398,6 +3400,36 @@
                 }
             });
 
+            // Temporary methodology-change overlay: amber wireframes mark each
+            // speaker's previous cabinet location, with a connector to its new active
+            // location. This makes real X/Z movement distinguishable from aim-only changes.
+            if (transitionFromLayout) {
+                const previousById = Object.fromEntries(transitionFromLayout.channels.map(ch => [ch.id, ch]));
+                const transitionMat = new THREE.LineBasicMaterial({ color: 0xf59e0b, transparent: true, opacity: 0.88 });
+                const transitionLineMat = new THREE.LineBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.8 });
+                activeLayout.channels.forEach(ch => {
+                    if (ch.group === 'Sub') return;
+                    const previous = previousById[ch.id];
+                    if (!previous) return;
+                    const dx = ch.x - previous.x, dy = ch.y - previous.y, dz = ch.z - previous.z;
+                    const movement = Math.sqrt(dx*dx + dy*dy + dz*dz);
+                    if (movement < 0.5) return;
+                    const oldGeometry = new THREE.EdgesGeometry(new THREE.BoxGeometry(previous.dims.w, previous.dims.h, previous.dims.d));
+                    const oldMarker = new THREE.LineSegments(oldGeometry, transitionMat);
+                    oldMarker.position.set(previous.x, previous.y, previous.z);
+                    if (previous.aimTarget) oldMarker.lookAt(previous.aimTarget.x, previous.aimTarget.y, previous.aimTarget.z);
+                    rootGroup.add(oldMarker);
+                    const connector = new THREE.Line(
+                        new THREE.BufferGeometry().setFromPoints([
+                            new THREE.Vector3(previous.x, previous.y, previous.z),
+                            new THREE.Vector3(ch.x, ch.y, ch.z)
+                        ]),
+                        transitionLineMat
+                    );
+                    rootGroup.add(connector);
+                });
+            }
+
             if (ghostLayout) {
                 const ghostMat = new THREE.LineBasicMaterial({ color: 0xc084fc, transparent: true, opacity: 0.72 });
                 ghostLayout.channels.forEach(gch => {
@@ -4191,7 +4223,7 @@ function printConstructionBlueprint(){if(!constructionBlueprintSVG)renderConstru
             renderGeometricProofs(layout, treatments, collisions);
             renderRationaleCards(layout, treatments);
             renderSchedules(layout, treatments);
-            rebuild3DScene(layout, ghostLayout, treatments, collisions);
+            rebuild3DScene(layout, ghostLayout, treatments, collisions, methodologyTransitionFrom);
         }
 
         function onSliderChange(changedControlId) {
@@ -4304,9 +4336,22 @@ function printConstructionBlueprint(){if(!constructionBlueprintSVG)renderConstru
         }
 
         function setActiveStandard(stdKey) {
+            if (stdKey === state.standard) return;
+            // Preserve the previous layout briefly so the 3D view can show exactly
+            // which speaker cabinets changed position when a methodology is selected.
+            // This is a visual transition audit; the active speakers are always rebuilt
+            // from the newly selected methodology's actual coordinates.
+            const previousLayout = computeMethodologyLayout(state.standard);
             state.standard = stdKey;
+            methodologyTransitionFrom = previousLayout;
+            if (methodologyTransitionTimer) clearTimeout(methodologyTransitionTimer);
             renderStandardButtons();
             updateAll();
+            methodologyTransitionTimer = setTimeout(() => {
+                methodologyTransitionFrom = null;
+                methodologyTransitionTimer = null;
+                updateAll();
+            }, 2600);
         }
 
         function setGhostStandard(stdKey) {
