@@ -371,8 +371,9 @@
                                 <span id="fsDispMlpZ" class="font-mono font-bold text-emerald-400">10' 8" (128.0")</span>
                             </div>
                             <input type="range" id="fsSliderMlpZ" min="96" max="154" step="1" value="128" oninput="onFsMlpSliderChange(this.value)" class="w-full">
-                            <div class="flex justify-end">
-                                <button onclick="snapToIdealMLP()" class="px-2 py-0.5 rounded bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/40 text-[10px] font-semibold">Snap Ideal MLP</button>
+                            <div class="grid grid-cols-2 gap-1.5">
+                                <button onclick="snapToBulkheadCenter()" title="Place the MLP at the midpoint of the modeled bulkhead span" class="px-2 py-1 rounded bg-amber-500/15 hover:bg-amber-500/25 text-amber-200 border border-amber-500/40 text-[10px] leading-tight font-semibold">Snap Bulkhead Center</button>
+                                <button onclick="snapToSelectedMethodIdealMLP()" title="Find the best MLP distance for the currently selected placement methodology by testing its geometry and modeled conflicts" class="px-2 py-1 rounded bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/40 text-[10px] leading-tight font-semibold">Snap Selected Method Ideal</button>
                             </div>
                         </div>
                         <div>
@@ -4024,6 +4025,50 @@ function printConstructionBlueprint(){if(!constructionBlueprintSVG)renderConstru
             const fsSlider = document.getElementById('fsSliderMlpZ');
             if (fsSlider) fsSlider.value = ideal.idealZ;
             updateAll();
+        }
+
+        function applyMlpSnap(z) {
+            const min = Number(document.getElementById('fsSliderMlpZ')?.min || 96);
+            const max = Number(document.getElementById('fsSliderMlpZ')?.max || 154);
+            state.mlpZ = Math.max(min, Math.min(max, Math.round(z)));
+            const mainSlider = document.getElementById('sliderMlpZ');
+            const fsSlider = document.getElementById('fsSliderMlpZ');
+            if (mainSlider) mainSlider.value = state.mlpZ;
+            if (fsSlider) fsSlider.value = state.mlpZ;
+            updateAll();
+        }
+
+        function snapToBulkheadCenter() {
+            const arch = computeArchitecturalObstructions();
+            // The center is the midpoint of the modeled 72-inch bulkhead span,
+            // not a fixed 36-inch room-depth coordinate.
+            applyMlpSnap((arch.bhStart + arch.bhEnd) / 2);
+        }
+
+        function snapToSelectedMethodIdealMLP() {
+            const originalZ = state.mlpZ;
+            const min = Number(document.getElementById('fsSliderMlpZ')?.min || 96);
+            const max = Number(document.getElementById('fsSliderMlpZ')?.max || 154);
+            const acousticAnchor = state.roomD * 0.59;
+            let best = null;
+
+            // Evaluate the active methodology at each selectable MLP position.
+            // Prioritize fewer modeled conflicts; use the 59% room-depth acoustic
+            // node as a tie-breaker. This is distinct from the Adaptive Expert
+            // Master Spec's dedicated ideal-MLP recommendation.
+            for (let z = min; z <= max; z += 1) {
+                state.mlpZ = z;
+                const layout = computeMethodologyLayout(state.standard);
+                const treatments = computeAcousticTreatments(layout);
+                const conflicts = evaluateAllCollisions(layout, treatments);
+                const score = conflicts.length;
+                const tieDistance = Math.abs(z - acousticAnchor);
+                if (!best || score < best.score || (score === best.score && tieDistance < best.tieDistance)) {
+                    best = { z, score, tieDistance };
+                }
+            }
+            state.mlpZ = originalZ;
+            applyMlpSnap(best ? best.z : computeIdealMLP().idealZ);
         }
 
         function setActiveStandard(stdKey) {
