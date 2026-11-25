@@ -1172,7 +1172,7 @@
             return { segments, flange, valid, reason };
         }
 
-        function computeMethodologyLayout(stdKey) {
+        function computeMethodologyLayoutBase(stdKey, expertGeometry = null) {
             const arch = computeArchitecturalObstructions();
             const halfW = arch.halfW;
             const mlpZ = state.mlpZ;
@@ -1208,7 +1208,7 @@
                     targetElevDeg = 48.0;
                     tfZ = mlpZ - refVerticalH / Math.tan(THREE.MathUtils.degToRad(targetElevDeg));
                     trZ = mlpZ + refVerticalH / Math.tan(THREE.MathUtils.degToRad(targetElevDeg));
-                    standardNote = '2026 Master Spec: 48° optimal overhead elevation with bulkhead edge-hugging optimization.';
+                    standardNote = 'Adaptive Expert Master: 48° overhead design target. Active listening-priority profile applies weighted three-seat geometric optimization while retaining MLP-biased aiming.';
                     break;
                 case 'dolby':
                     mainHalfSpan = Math.min(halfW - 16, mlpZ * Math.tan(THREE.MathUtils.degToRad(27)));
@@ -1312,6 +1312,15 @@
                     trZ = mlpZ + refVerticalH * Math.tan(THREE.MathUtils.degToRad(52));
                     standardNote = 'Trinnov / Auro-3D Hybrid: Perimeter-biased height array (~36°–38° elevation) for Atmos + Auro-3D.';
                     break;
+            }
+
+            if (stdKey === 'expert' && expertGeometry) {
+                if (Number.isFinite(expertGeometry.mainHalfSpan)) mainHalfSpan = expertGeometry.mainHalfSpan;
+                if (Number.isFinite(expertGeometry.sideZ)) sideZ = expertGeometry.sideZ;
+                if (Number.isFinite(expertGeometry.rearHalfSpan)) rearHalfSpan = expertGeometry.rearHalfSpan;
+                if (Number.isFinite(expertGeometry.atmosHalfX)) atmosHalfX = expertGeometry.atmosHalfX;
+                if (Number.isFinite(expertGeometry.tfZ)) tfZ = expertGeometry.tfZ;
+                if (Number.isFinite(expertGeometry.trZ)) trZ = expertGeometry.trZ;
             }
 
             mainHalfSpan = Math.max(42, Math.min(halfW - 14, mainHalfSpan));
@@ -1557,6 +1566,125 @@
                     rear: rearHalfSpan * 2
                 }
             };
+        }
+
+        // Adaptive Expert's profile is a genuine deterministic coordinate-search optimizer.
+        // It varies speaker-array geometry, rebuilds the actual mounted layout for every
+        // candidate, and rejects candidates that introduce any new modeled collision.
+        function computeMethodologyLayout(stdKey) {
+            const base = computeMethodologyLayoutBase(stdKey);
+            if (stdKey !== 'expert') return base;
+
+            const profile = getExpertPriorityProfile();
+            const arch = computeArchitecturalObstructions();
+            const baseGeometry = {
+                mainHalfSpan: Math.abs(base.channels.find(c => c.id === 'FL').x),
+                sideZ: base.channels.find(c => c.id === 'SL').z,
+                rearHalfSpan: Math.abs(base.channels.find(c => c.id === 'SBL').x),
+                atmosHalfX: Math.abs(base.channels.find(c => c.id === 'TFL').x),
+                tfZ: base.channels.find(c => c.id === 'TFL').desiredZ,
+                trZ: base.channels.find(c => c.id === 'TRL').desiredZ
+            };
+            const baselineTreatments = computeAcousticTreatments(base);
+            const baselineCollisions = evaluateAllCollisions(base, baselineTreatments);
+            const baselineCollisionIds = new Set(baselineCollisions.map(c => c.id));
+            const seats = [
+                {x:-ARCH.sofaW/3,z:state.mlpZ,w:profile.outer},
+                {x:0,z:state.mlpZ,w:profile.center},
+                {x:ARCH.sofaW/3,z:state.mlpZ,w:profile.outer}
+            ];
+
+            function candidateAllowed(candidate) {
+                const treatments = computeAcousticTreatments(candidate);
+                const collisions = evaluateAllCollisions(candidate, treatments);
+                return collisions.every(c => baselineCollisionIds.has(c.id));
+            }
+            function objective(candidate, geometry) {
+                let total = 0;
+                let totalWeight = 0;
+                candidate.channels.forEach(ch => {
+                    if (ch.group === 'Sub') return;
+                    let targetAz = null, targetElev = null;
+                    if (ch.id === 'FL' || ch.id === 'FR') targetAz = 28.5;
+                    else if (ch.id === 'SL' || ch.id === 'SR') targetAz = 90;
+                    else if (ch.id === 'SBL' || ch.id === 'SBR') targetAz = 145;
+                    else if (ch.id.startsWith('TF')) { targetAz = 45; targetElev = 48; }
+                    else if (ch.id.startsWith('TR')) { targetAz = 135; targetElev = 48; }
+                    if (targetAz === null) return;
+                    seats.forEach(seat => {
+                        const dx = ch.x - seat.x, dz = seat.z - ch.z;
+                        const horizontal = Math.hypot(dx,dz);
+                        const az = THREE.MathUtils.radToDeg(Math.atan2(Math.abs(dx),dz));
+                        const elev = THREE.MathUtils.radToDeg(Math.atan2(ch.y-state.earY,horizontal));
+                        const azError = az-targetAz;
+                        const elevError = targetElev === null ? 0 : elev-targetElev;
+                        const w = seat.w;
+                        total += w * (azError*azError + (targetElev === null ? 0 : 0.85*elevError*elevError));
+                        totalWeight += w;
+                    });
+                });
+                // Mild regularization avoids large shifts for negligible angular gains.
+                const movement = Object.keys(baseGeometry).reduce((sum,k) => sum + Math.pow((geometry[k]-baseGeometry[k]),2),0);
+                return total / Math.max(0.001,totalWeight) + movement*0.018;
+            }
+
+            let bestGeometry = {...baseGeometry};
+            let bestLayout = base;
+            let bestScore = objective(base,baseGeometry);
+            const ranges = {
+                mainHalfSpan:[42,Math.min(state.roomW/2-14, state.mlpZ*Math.tan(THREE.MathUtils.degToRad(38)))],
+                sideZ:[Math.max(72,state.mlpZ-24),Math.min(state.roomD-24,state.mlpZ+28)],
+                rearHalfSpan:[ARCH.rearDoorW/2+14,state.roomW/2-16],
+                atmosHalfX:[24,state.roomW/2-16],
+                tfZ:[Math.max(18,arch.bhStart-42),Math.min(state.mlpZ-8,arch.bhStart+30)],
+                trZ:[Math.max(state.mlpZ+8,arch.bhEnd-30),Math.min(state.roomD-18,arch.bhEnd+42)]
+            };
+            // Coordinate descent: coarse-to-fine 1D searches over each independent
+            // array dimension. Rebuilding the layout enforces actual bracket/cabinet geometry.
+            [6,3,1.5].forEach(step => {
+                Object.keys(bestGeometry).forEach(key => {
+                    [-step,step].forEach(delta => {
+                        const limits = ranges[key];
+                        const value = clampValue(bestGeometry[key]+delta,limits[0],limits[1]);
+                        if (Math.abs(value-bestGeometry[key]) < 0.01) return;
+                        const trialGeometry = {...bestGeometry,[key]:value};
+                        const trial = computeMethodologyLayoutBase('expert',trialGeometry);
+                        if (!candidateAllowed(trial)) return;
+                        const score = objective(trial,trialGeometry);
+                        if (score < bestScore-0.0001) {
+                            bestScore=score;bestGeometry=trialGeometry;bestLayout=trial;
+                        }
+                    });
+                });
+            });
+
+            // Aim each directional speaker along the weighted mean of the three
+            // listener sight-lines. The primary seat dominates; outer seats still
+            // influence toe-in/tilt. This is a geometric aiming proxy, not polar data.
+            bestLayout.channels.forEach(ch => {
+                if (ch.group === 'Sub') return;
+                const direction = new THREE.Vector3();
+                seats.forEach(seat => {
+                    const v = new THREE.Vector3(seat.x-ch.x,state.earY-ch.y,seat.z-ch.z).normalize();
+                    direction.addScaledVector(v,seat.w);
+                });
+                if (direction.lengthSq()>1e-8) {
+                    direction.normalize().multiplyScalar(100);
+                    ch.aimTarget={x:ch.x+direction.x,y:ch.y+direction.y,z:ch.z+direction.z};
+                }
+            });
+            bestLayout.optimization = {
+                profile:state.expertProfile||'mlp80',
+                label:profile.label,
+                weights:{center:profile.center,outer:profile.outer},
+                objective:bestScore,
+                geometry:bestGeometry,
+                baselineGeometry:baseGeometry,
+                moved:Object.keys(bestGeometry).filter(k=>Math.abs(bestGeometry[k]-baseGeometry[k])>0.1),
+                baselineCollisionIds:[...baselineCollisionIds]
+            };
+            bestLayout.standardNote += ' Active optimizer: '+profile.label+' ('+(profile.center*100)+'% MLP / '+(profile.outer*100)+'% each outer seat); weighted angular placement search, profile-weighted aiming, and no-new-collision constraint.';
+            return bestLayout;
         }
 
         function computeAcousticTreatments(activeLayout) {
@@ -3961,6 +4089,11 @@ function printConstructionBlueprint(){if(!constructionBlueprintSVG)renderConstru
             const ghostLayout = state.ghostStandard !== 'none' ? computeMethodologyLayout(state.ghostStandard) : null;
             const treatments = computeAcousticTreatments(layout);
             const collisions = evaluateAllCollisions(layout, treatments);
+            const optStatus = document.getElementById('expertPriorityScore');
+            if (optStatus && state.standard === 'expert' && layout.optimization) {
+                const moved = layout.optimization.moved.length ? layout.optimization.moved.join(', ') : 'baseline geometry retained';
+                optStatus.textContent = layout.optimization.label+' • optimized dimensions: '+moved+' • weighted objective '+layout.optimization.objective.toFixed(2)+' • no new modeled collisions';
+            }
             const ideal = computeIdealMLP();
             const atmosRecommendation = getRecommendedAtmosMountOption();
             const atmosRecommendationText = document.getElementById('autoRecommendText');
