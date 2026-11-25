@@ -136,6 +136,28 @@
                     <p class="text-[10px] text-slate-500 leading-relaxed">These weights govern the workstation's seat-priority evaluation, not Dirac's internal optimization. They do not claim measured sound quality or automatically move speakers; physical geometry, coverage and collision checks remain independently visible.</p>
                 </div>
 
+                <div id="methodologyArchitecturePanel" class="bg-[#111b27] border border-cyan-500/30 rounded-xl p-3 mb-4 space-y-3">
+                    <div class="flex items-center justify-between gap-2">
+                        <div>
+                            <div class="text-xs font-bold uppercase tracking-wider text-cyan-300">Adaptive Expert — Design Principles & Evaluation</div>
+                            <div class="text-[10px] text-slate-400 mt-1">Optimizer decides placement • independent principles audit the result</div>
+                        </div>
+                        <span id="methodologyAuthorityBadge" class="text-[10px] font-mono px-2 py-1 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">MLP optimizer primary</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10px]">
+                        <div class="rounded-lg bg-[#0d1118] border border-slate-700/70 p-2"><b class="text-white">Grimani · System integration</b><p class="text-slate-400 mt-1">Evaluate the bed layer and overhead array as one coordinated sound field; inspect channel geometry and transitions, not isolated angles alone.</p></div>
+                        <div class="rounded-lg bg-[#0d1118] border border-slate-700/70 p-2"><b class="text-white">Home Theater Gurus · Acoustic practicality</b><p class="text-slate-400 mt-1">Consider speaker aiming, coverage, reflection paths, treatments, and real-room installation compromises. Generic coverage is only a proxy until measured polar data is supplied.</p></div>
+                        <div class="rounded-lg bg-[#0d1118] border border-slate-700/70 p-2"><b class="text-white">Theater at Home · Measurable geometry</b><p class="text-slate-400 mt-1">Keep positions and offsets reproducible as room-relative coordinates that can be transferred to the actual build.</p></div>
+                        <div class="rounded-lg bg-[#0d1118] border border-slate-700/70 p-2"><b class="text-white">CEDIA / CTA-RP22 · Listening-area reference</b><p class="text-slate-400 mt-1">Independently inspect the three-seat listening area, wall proximity, and reference-layout differences. This is not an RP22 compliance certification.</p></div>
+                        <div class="rounded-lg bg-[#0d1118] border border-slate-700/70 p-2 sm:col-span-2"><b class="text-white">Dolby · Format compatibility</b><p class="text-slate-400 mt-1">Compare achieved channel angles with format guidance. Deviations are disclosed as trade-offs; Dolby reference positions do not replace the selected MLP optimization.</p></div>
+                    </div>
+                    <div class="border-t border-slate-700/70 pt-2">
+                        <div class="flex items-center justify-between gap-2 mb-1"><b class="text-[11px] text-white">Live evaluation criteria</b><span id="methodologyAuditSummary" class="text-[10px] text-slate-400">Awaiting layout evaluation</span></div>
+                        <div id="methodologyAuditTable" class="overflow-x-auto text-[10px] text-slate-300"></div>
+                    </div>
+                    <p class="text-[10px] leading-relaxed text-slate-500">Evidence labels are deliberate: geometric checks are calculated from the current model; acoustic/directivity and calibration items remain estimates or unmodeled until measured speaker data, room measurements, and Dirac results are supplied. Reference methodologies audit the selected layout; they do not vote on or overwrite its coordinates.</p>
+                </div>
+
                 <div class="pt-3 border-t border-slate-800/80">
                     <div class="flex items-center justify-between mb-2">
                         <label for="ghostSelect" class="text-xs font-bold tracking-wider uppercase text-purple-400">2. 3D Ghost Overlay Comparison</label>
@@ -4092,6 +4114,7 @@ function printConstructionBlueprint(){if(!constructionBlueprintSVG)renderConstru
             const ghostLayout = state.ghostStandard !== 'none' ? computeMethodologyLayout(state.ghostStandard) : null;
             const treatments = computeAcousticTreatments(layout);
             const collisions = evaluateAllCollisions(layout, treatments);
+            if (typeof renderMethodologyArchitectureAudit === 'function') renderMethodologyArchitectureAudit(layout, treatments, collisions);
             const optStatus = document.getElementById('expertPriorityScore');
             if (optStatus && state.standard === 'expert' && layout.optimization) {
                 const moved = layout.optimization.moved.length ? layout.optimization.moved.join(', ') : 'baseline geometry retained';
@@ -4515,6 +4538,30 @@ const EXPERT_PRIORITY_PROFILES = {
  mlp60:{label:'Broader Listening Area',center:0.60,outer:0.20,description:'60% MLP / 20% left / 20% right. Still prioritizes the MLP while giving the sofa ends more influence.'}
 };
 function getExpertPriorityProfile(){return EXPERT_PRIORITY_PROFILES[state.expertProfile]||EXPERT_PRIORITY_PROFILES.mlp80;}
+function renderMethodologyArchitectureAudit(layout,treatments,collisions){
+ const profile=getExpertPriorityProfile(),opt=layout.optimization||null;
+ const channels=layout.channels||[],atmos=channels.filter(x=>x.group==='Atmos');
+ const avgElev=atmos.length?atmos.reduce((s,x)=>s+(Number(x.elevDeg)||0),0)/atmos.length:NaN;
+ const front=channels.filter(x=>['FL','FR'].includes(x.id));
+ const side=channels.filter(x=>['SL','SR'].includes(x.id));
+ const rear=channels.filter(x=>['SBL','SBR'].includes(x.id));
+ const fmt=n=>Number.isFinite(n)?n.toFixed(1):'—';
+ const rows=[
+  {principle:'Primary decision authority',criterion:'Weighted MLP geometric optimizer',evidence:opt?profile.label+' ('+(profile.center*100)+' / '+(profile.outer*100)+' / '+(profile.outer*100)+'); '+(opt.moved?.length?opt.moved.length+' geometry dimensions changed':'baseline geometry retained'):'Select Adaptive Expert Master to activate the weighted solver.',status:opt?'ACTIVE':'REFERENCE MODE'},
+  {principle:'Physical feasibility',criterion:'Room / mount / obstruction constraints',evidence:collisions.length?collisions.length+' modeled conflict(s) remain':'No modeled architectural conflicts',status:collisions.length?'REVIEW':'PASS'},
+  {principle:'Grimani — coordinated sound field',criterion:'Bed + overhead channel groups evaluated together',evidence:front.length+' L/R mains · '+side.length+' side surrounds · '+rear.length+' rear surrounds · '+atmos.length+' overhead channels; mean overhead elevation '+fmt(avgElev)+'°',status:'GEOMETRY ONLY'},
+  {principle:'Home Theater Gurus — acoustic practicality',criterion:'Aiming, coverage, reflection and treatment review',evidence:'Treatment geometry is modeled; entered directivity envelope is a generic proxy, not measured polar data.',status:'PARTIAL / PROXY'},
+  {principle:'Theater at Home — measurable geometry',criterion:'Buildable room-relative coordinates',evidence:channels.length+' channel coordinates and mounting geometry available for schedules / blueprint.',status:'CALCULATED'},
+  {principle:'CEDIA / CTA-RP22 — listening area',criterion:'Three-seat and wall-proximity reference',evidence:'MLP priority weights remain '+(profile.center*100)+'% center / '+(profile.outer*100)+'% each outer seat; RP22 remains a separate comparison, not a solver constraint.',status:'REFERENCE CHECK'},
+  {principle:'Dolby — format compatibility',criterion:'Compare achieved angles with format guidance',evidence:'Current achieved angles remain visible in geometric proofs; Dolby reference does not override optimized coordinates.',status:'REFERENCE CHECK'},
+  {principle:'Dirac / measured acoustics',criterion:'Post-calibration response and directivity validation',evidence:'No Dirac filter, microphone measurement, or measured in-room response is imported into this geometric solver.',status:'NOT MEASURED'}
+ ];
+ const statusClass=s=>s==='PASS'||s==='ACTIVE'||s==='CALCULATED'?'text-emerald-300':s==='NOT MEASURED'?'text-slate-400':s.includes('PROXY')||s.includes('REFERENCE')?'text-amber-300':'text-cyan-300';
+ const table='<table class="w-full min-w-[680px]"><thead><tr class="text-slate-500 border-b border-slate-700"><th class="p-1.5 text-left">Design principle</th><th class="p-1.5 text-left">Evaluation criterion</th><th class="p-1.5 text-left">Current evidence</th><th class="p-1.5 text-left">State</th></tr></thead><tbody>'+rows.map(r=>'<tr class="border-b border-slate-800/80 align-top"><td class="p-1.5 font-semibold text-slate-200">'+v8Esc(r.principle)+'</td><td class="p-1.5">'+v8Esc(r.criterion)+'</td><td class="p-1.5 text-slate-400">'+v8Esc(r.evidence)+'</td><td class="p-1.5 font-semibold '+statusClass(r.status)+'">'+v8Esc(r.status)+'</td></tr>').join('')+'</tbody></table>';
+ const el=v8$('methodologyAuditTable');if(el)el.innerHTML=table;
+ const summary=v8$('methodologyAuditSummary');if(summary)summary.textContent=(opt?'Optimizer active':'Optimizer not active')+' · '+collisions.length+' modeled conflict(s) · '+channels.length+' channels';
+ const badge=v8$('methodologyAuthorityBadge');if(badge)badge.textContent=opt?'MLP optimizer primary':'Reference preset active';
+}
 function updateExpertPriorityDescription(){const p=getExpertPriorityProfile();const el=document.getElementById('expertPriorityDescription');if(el)el.textContent=p.description+' The solver searches front-stage span, side/rear surround depth and spacing, and Atmos spacing/fore-aft coordinates; it also computes profile-weighted speaker aiming while keeping physical mounting and no-new-collision constraints.';}
 function setExpertPriorityProfile(key){if(!EXPERT_PRIORITY_PROFILES[key])key='mlp80';state.expertProfile=key;updateExpertPriorityDescription();if(document.getElementById('expertPriorityProfile'))document.getElementById('expertPriorityProfile').value=key;updateAll();}
 function v8Inputs() {
