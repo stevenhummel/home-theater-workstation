@@ -135,7 +135,7 @@
                         <option value="gurus">4. Home Theater Gurus (HTG Sound Bubble)</option>
                         <option value="advice">5. Audio Advice Design Tool (Saved 7.2.4 Coordinates)</option>
                         <option value="tah">6. Theater At Home (TAH 0.7x Grid)</option>
-                        <option value="cedia">7. CEDIA / CTA-CEB22 RP22 Spec</option>
+                        <option value="cedia">7. CEDIA / CTA-RP22 Spec</option>
                         <option value="trinnov">8. Trinnov / Auro-3D Hybrid (36° Height)</option>
                     </select>
                 </div>
@@ -361,7 +361,7 @@
                                 <option value="gurus">4. Home Theater Gurus (HTG Sound Bubble)</option>
                                 <option value="advice">5. Audio Advice Design Tool (Saved Specs)</option>
                                 <option value="tah">6. Theater At Home (TAH 0.7x Grid)</option>
-                                <option value="cedia">7. CEDIA / CTA-CEB22 RP22 Spec</option>
+                                <option value="cedia">7. CEDIA / CTA-RP22 Spec</option>
                                 <option value="trinnov">8. Trinnov / Auro-3D Hybrid (36° Height)</option>
                             </select>
                         </div>
@@ -858,8 +858,8 @@
             cedia: {
                 id: 'cedia',
                 shortTitle: '7. CEDIA / RP22 Spec',
-                fullTitle: '7. CEDIA / CTA-CEB22 RP22 Recommended Practice',
-                desc: 'ANSI/CEDIA RP22 Level 3/4 engineering target: enforces strict angular separation (≥30° between bed and height layers), controlled early reflections, and uniform seating coverage across all 3 sectional positions.'
+                fullTitle: '7. CEDIA / CTA-RP22 Immersive Audio Design',
+                desc: 'RP22-informed, room-adaptive 7.1.4 layout. Uses the actual 228 × 208 × 91 in room, 3-seat listening area, 48 in rear French-door opening, 72 in bulkhead, wall-mounted side surrounds, ceiling height and active Atmos mount geometry. Prioritizes RP22 multi-seat placement zones, seat-to-wall spacing, upper-speaker coverage and feasible installation geometry. Performance-level criteria are audited separately; this preset is not a claim of RP22 certification.'
             },
             trinnov: {
                 id: 'trinnov',
@@ -1254,16 +1254,32 @@
                     targetElevDeg = 55.0;
                     standardNote = 'Theater At Home: 0.70× ear-to-ceiling square overhead grid (~35° off vertical) + 0.58× bed multipliers.';
                     break;
-                case 'cedia':
+                case 'cedia': {
+                    // RP22's unified layout method is listening-area and room driven,
+                    // not a single fixed set of Atmos angles. This 7.1.4 adaptation
+                    // uses the modeled three-seat sofa as the listening area.
+                    const listeningHalfWidth = ARCH.sofaW / 3; // outer listener head positions
+                    const listeningHalfDepth = 0; // one row: head centers share the MLP Z datum
+                    const frontSeatEdgeZ = mlpZ - listeningHalfDepth;
+                    const rearSeatEdgeZ = mlpZ + listeningHalfDepth;
+                    // Screen L/R stay in a conventional front-stage zone, constrained by room width.
                     mainHalfSpan = Math.min(halfW - 18, mlpZ * Math.tan(THREE.MathUtils.degToRad(27.5)));
-                    sideZ = mlpZ + 14;
-                    rearHalfSpan = Math.max(ARCH.rearDoorW / 2 + 18, (state.roomD - mlpZ) * Math.tan(THREE.MathUtils.degToRad(27.5)));
-                    atmosHalfX = refVerticalH * Math.tan(THREE.MathUtils.degToRad(34));
-                    targetElevDeg = 48.0;
-                    tfZ = mlpZ - refVerticalH * Math.tan(THREE.MathUtils.degToRad(42));
-                    trZ = mlpZ + refVerticalH * Math.tan(THREE.MathUtils.degToRad(42));
-                    standardNote = 'CEDIA RP22 Level 4: Enforces >=32° angular separation between bed and height layers across all 3 seats.';
+                    // Side surrounds remain to the sides of the listening area, not behind it.
+                    sideZ = mlpZ;
+                    // Rear surrounds sit behind the listening area and outside the 48-inch French-door opening.
+                    rearHalfSpan = Math.max(ARCH.rearDoorW / 2 + 18, Math.min(halfW - 16, ARCH.sofaW * 0.45));
+                    // RP22 upper-layer guidance: front pair forward of listening area, rear pair behind;
+                    // lateral spacing is at least listening-area width where feasible, but never wider than L/R mains.
+                    atmosHalfX = Math.min(mainHalfSpan, Math.max(listeningHalfWidth, refVerticalH * Math.tan(THREE.MathUtils.degToRad(25))));
+                    // Choose a 35-degree RSP elevation within the common 30–45 degree immersive-format range,
+                    // then enforce the RP22 multi-seat front/rear zone boundaries.
+                    const rp22UpperOffset = Math.max(ARCH.sofaMainD / 2 + 6, refVerticalH / Math.tan(THREE.MathUtils.degToRad(35)));
+                    tfZ = Math.min(frontSeatEdgeZ - 1, mlpZ - rp22UpperOffset);
+                    trZ = Math.max(rearSeatEdgeZ + 1, mlpZ + rp22UpperOffset);
+                    targetElevDeg = 35.0;
+                    standardNote = 'CEDIA/CTA-RP22 room-adaptive 7.1.4 interpretation: side surrounds alongside the 3-seat listening area; rear surrounds behind it and clear of the French-door opening; upper-front pair forward of the listening area, upper-rear pair behind it, and upper lateral spacing scaled to the sofa width and front L/R span. Room, bulkhead and mount constraints are applied by the geometry solver. RP22 performance level is assessed separately; 11 discrete feeds meet the Level 2 count threshold only.';
                     break;
+                }
                 case 'trinnov':
                     mainHalfSpan = Math.min(halfW - 16, mlpZ * Math.tan(THREE.MathUtils.degToRad(30)));
                     sideZ = mlpZ + 10;
@@ -3474,6 +3490,18 @@
             `).join('');
         }
 
+        function getCediaRP22RoomProfile() {
+            const seatXs = [-ARCH.sofaW / 3, 0, ARCH.sofaW / 3];
+            const seatZ = state.mlpZ;
+            const sideClearance = Math.min(...seatXs.map(x => state.roomW / 2 - Math.abs(x)));
+            const frontClearance = seatZ;
+            const rearClearance = state.roomD - seatZ;
+            const minimumWallClearanceM = Math.min(sideClearance, frontClearance, rearClearance) * 0.0254;
+            const wallLevel = minimumWallClearanceM > 1.5 ? 4 : minimumWallClearanceM > 1.2 ? 3 : minimumWallClearanceM > 0.8 ? 2 : minimumWallClearanceM > 0.5 ? 1 : 0;
+            const levelText = wallLevel ? 'Level ' + wallLevel : 'below Level 1 threshold';
+            return 'Live room checks: ' + state.roomW.toFixed(0) + ' × ' + state.roomD.toFixed(0) + ' × ' + state.ceilH.toFixed(0) + ' in; three modeled listener-head positions at X ' + seatXs.map(x => (x + state.roomW / 2).toFixed(1)).join(' / ') + ' in from left; minimum listener-head-to-wall distance ' + (minimumWallClearanceM * 39.3701).toFixed(1) + ' in (' + minimumWallClearanceM.toFixed(2) + ' m), meeting the RP22 seating-distance ' + levelText + ' threshold. The 11 discrete feeds meet the RP22 Level 2 minimum (Level 3/4 require 15). Overall room level is not assigned: SPL capacity, seat-to-seat response, subwoofer/LFE output and extension, background noise, isolation and reverberation require verified measurements or additional equipment data.';
+        }
+
         function renderStandardButtons() {
             const grid = document.getElementById('standardGrid');
             const fsSel = document.getElementById('fsStandardSelect');
@@ -3502,7 +3530,9 @@
 
             const cur = STANDARDS[state.standard];
             document.getElementById('standardInfoTitle').textContent = cur.fullTitle;
-            document.getElementById('standardInfoDesc').textContent = cur.desc;
+            document.getElementById('standardInfoDesc').textContent = state.standard === 'cedia'
+                ? cur.desc + ' ' + getCediaRP22RoomProfile()
+                : cur.desc;
             document.getElementById('rationaleStdBadge').textContent = cur.shortTitle;
         }
 
