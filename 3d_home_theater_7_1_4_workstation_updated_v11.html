@@ -297,6 +297,7 @@
                         <span id="dispMlpZ" class="font-mono text-sm font-extrabold text-emerald-300 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-500/40">10' 8" (128.0")</span>
                     </div>
                     <input type="range" id="sliderMlpZ" min="96" max="154" step="1" value="128" oninput="onSliderChange('sliderMlpZ')" class="w-full accent-emerald-500">
+                    <button onclick="snapToBulkheadCenter()" title="Place the MLP at the midpoint of the modeled bulkhead span" class="w-full px-2.5 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-200 border border-amber-500/40 text-[11px] leading-tight font-semibold transition">Snap Bulkhead Center</button>
                     
                     <div class="flex items-center justify-between gap-2 pt-1.5 border-t border-emerald-500/30">
                         <div class="text-[11px] text-slate-300">
@@ -386,6 +387,14 @@
                         <div>
                             <label class="text-[10px] text-slate-400 block mb-1">1. Placement Methodology</label>
                             <select id="fsStandardSelect" onchange="setActiveStandard(this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white"></select>
+                        </div>
+                        <div id="fsExpertPriorityPanel" class="bg-[#0d171d] border border-emerald-500/30 rounded-lg p-2.5 space-y-1.5">
+                            <label for="fsExpertPriorityProfile" class="text-[10px] font-bold uppercase tracking-wider text-emerald-300">Adaptive Expert — Listening Priority</label>
+                            <select id="fsExpertPriorityProfile" onchange="setExpertPriorityProfile(this.value)" class="w-full bg-slate-900 border border-emerald-500/40 rounded-lg px-2 py-1.5 text-xs text-white">
+                                <option value="mlp80">Primary Seat Focus — 80 / 10 / 10</option>
+                                <option value="mlp70">Balanced Primary Seat — 70 / 15 / 15</option>
+                                <option value="mlp60">Broader Listening Area — 60 / 20 / 20</option>
+                            </select>
                         </div>
                         <div>
                             <label class="text-[10px] font-semibold text-purple-400 block mb-1">2. 3D Ghost Overlay Comparison</label>
@@ -1278,7 +1287,7 @@
                     tfZ = 91.11;         // 7'7.11" from screen/front wall
                     trZ = state.roomD - 49.11; // 13'2.89" from front wall at 208" depth; fixed 49.11" rear-wall offset
                     targetElevDeg = 0; // Report provides coordinates, not a target elevation angle.
-                    standardNote = 'Audio Advice saved 7.2.4 plan adapted to the current 7.1.4 system: reported bed-layer and four-overhead coordinates retained; current single-sub topology modeled. Side and rear surround pairs remain separate; actual angles are recalculated from live MLP.';
+                    standardNote = 'Audio Advice saved 7.2.4 plan adapted to this 7.1.4 room. The reported wall-datum coordinates are intentionally fixed to the front/rear walls and room centerline (mains ±66.0 in, side surrounds 121.0 in from front wall, rear pair ±43.3 in, Atmos ±26.755 in); moving the MLP recalculates angles and aiming, not the saved installation coordinates. Selecting this preset repositions the modeled speakers to these coordinates.';
                     break;
                 }
                 case 'tah':
@@ -3710,9 +3719,13 @@
                 ? cur.desc + ' ' + getCediaRP22RoomProfile()
                 : cur.desc;
             const priorityPanel = document.getElementById('expertPriorityPanel');
+            const fsPriorityPanel = document.getElementById('fsExpertPriorityPanel');
             if (priorityPanel) priorityPanel.classList.toggle('hidden', state.standard !== 'expert');
+            if (fsPriorityPanel) fsPriorityPanel.classList.toggle('hidden', state.standard !== 'expert');
             const prioritySelect = document.getElementById('expertPriorityProfile');
+            const fsPrioritySelect = document.getElementById('fsExpertPriorityProfile');
             if (prioritySelect) prioritySelect.value = state.expertProfile || 'mlp80';
+            if (fsPrioritySelect) fsPrioritySelect.value = state.expertProfile || 'mlp80';
             updateExpertPriorityDescription();
             document.getElementById('rationaleStdBadge').textContent = cur.shortTitle;
         }
@@ -4564,7 +4577,7 @@ function renderMethodologyArchitectureAudit(layout,treatments,collisions){
  const badge=v8$('methodologyAuthorityBadge');if(badge)badge.textContent=opt?'MLP optimizer primary':'Reference preset active';
 }
 function updateExpertPriorityDescription(){const p=getExpertPriorityProfile();const el=document.getElementById('expertPriorityDescription');if(el)el.textContent=p.description+' The solver searches front-stage span, side/rear surround depth and spacing, and Atmos spacing/fore-aft coordinates; it also computes profile-weighted speaker aiming while keeping physical mounting and no-new-collision constraints.';}
-function setExpertPriorityProfile(key){if(!EXPERT_PRIORITY_PROFILES[key])key='mlp80';state.expertProfile=key;updateExpertPriorityDescription();if(document.getElementById('expertPriorityProfile'))document.getElementById('expertPriorityProfile').value=key;updateAll();}
+function setExpertPriorityProfile(key){if(!EXPERT_PRIORITY_PROFILES[key])key='mlp80';state.expertProfile=key;updateExpertPriorityDescription();['expertPriorityProfile','fsExpertPriorityProfile'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=key;});updateAll();}
 function v8Inputs() {
  return { tolerance:{room:v8Num('v8TolRoom',0.5),speaker:v8Num('v8TolSpeaker',0.5),seat:v8Num('v8TolSeat',2),clear:v8Num('v8TolClear',1)},
  seats:{left:{x:v8Num('v8SeatL',-31.2),z:v8Num('v8SeatLZ',128)},center:{x:v8Num('v8SeatC',0),z:v8Num('v8SeatCZ',128)},right:{x:v8Num('v8SeatR',31.2),z:v8Num('v8SeatRZ',128)}},
