@@ -1594,10 +1594,13 @@
                 {x:ARCH.sofaW/3,z:state.mlpZ,w:profile.outer}
             ];
 
+            const baselineCollisionReasons = new Map(baselineCollisions.map(c => [c.id,c.reason]));
             function candidateAllowed(candidate) {
                 const treatments = computeAcousticTreatments(candidate);
                 const collisions = evaluateAllCollisions(candidate, treatments);
-                return collisions.every(c => baselineCollisionIds.has(c.id));
+                // A candidate may retain a pre-existing modeled issue, but it may not
+                // introduce a new issue or worsen/change the reason for an existing one.
+                return collisions.every(c => baselineCollisionIds.has(c.id) && baselineCollisionReasons.get(c.id) === c.reason);
             }
             function objective(candidate, geometry) {
                 let total = 0;
@@ -4092,7 +4095,9 @@ function printConstructionBlueprint(){if(!constructionBlueprintSVG)renderConstru
             const optStatus = document.getElementById('expertPriorityScore');
             if (optStatus && state.standard === 'expert' && layout.optimization) {
                 const moved = layout.optimization.moved.length ? layout.optimization.moved.join(', ') : 'baseline geometry retained';
-                optStatus.textContent = layout.optimization.label+' • optimized dimensions: '+moved+' • weighted objective '+layout.optimization.objective.toFixed(2)+' • no new modeled collisions';
+                const g=layout.optimization.geometry,b=layout.optimization.baselineGeometry;
+                const fmt=k=>b[k].toFixed(1)+'→'+g[k].toFixed(1)+'"';
+                optStatus.textContent = layout.optimization.label+' • '+(layout.optimization.moved.length?layout.optimization.moved.map(k=>k+': '+fmt(k)).join(' | '):'baseline geometry retained')+' • weighted objective '+layout.optimization.objective.toFixed(2)+' • no new modeled collisions';
             }
             const ideal = computeIdealMLP();
             const atmosRecommendation = getRecommendedAtmosMountOption();
@@ -4510,7 +4515,7 @@ const EXPERT_PRIORITY_PROFILES = {
  mlp60:{label:'Broader Listening Area',center:0.60,outer:0.20,description:'60% MLP / 20% left / 20% right. Still prioritizes the MLP while giving the sofa ends more influence.'}
 };
 function getExpertPriorityProfile(){return EXPERT_PRIORITY_PROFILES[state.expertProfile]||EXPERT_PRIORITY_PROFILES.mlp80;}
-function updateExpertPriorityDescription(){const p=getExpertPriorityProfile();const el=document.getElementById('expertPriorityDescription');if(el)el.textContent=p.description;}
+function updateExpertPriorityDescription(){const p=getExpertPriorityProfile();const el=document.getElementById('expertPriorityDescription');if(el)el.textContent=p.description+' The solver searches front-stage span, side/rear surround depth and spacing, and Atmos spacing/fore-aft coordinates; it also computes profile-weighted speaker aiming while keeping physical mounting and no-new-collision constraints.';}
 function setExpertPriorityProfile(key){if(!EXPERT_PRIORITY_PROFILES[key])key='mlp80';state.expertProfile=key;updateExpertPriorityDescription();if(document.getElementById('expertPriorityProfile'))document.getElementById('expertPriorityProfile').value=key;updateAll();}
 function v8Inputs() {
  return { tolerance:{room:v8Num('v8TolRoom',0.5),speaker:v8Num('v8TolSpeaker',0.5),seat:v8Num('v8TolSeat',2),clear:v8Num('v8TolClear',1)},
