@@ -4269,8 +4269,8 @@ function renderConstructionBlueprint(){
   const signed=n=>(n>=0?'+':'')+f2(n);
   let datum='',offset=0;
   if(r.group==='Atmos'){
-   datum='Upper ceiling to speaker reference point';
-   offset=state.ceilH-c.y;
+   datum=state.atmosMountOpt===2?'Bulkhead soffit underside to speaker reference point':'Upper ceiling to speaker reference point';
+   offset=(state.atmosMountOpt===2?arch.bhClearY:state.ceilH)-c.y;
   } else if(r.id==='SL'||r.id==='SR'){
    datum='Nearest side wall to speaker reference point';
    offset=state.roomW/2-Math.abs(c.x);
