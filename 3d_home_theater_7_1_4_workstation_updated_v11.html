@@ -485,7 +485,8 @@
             <section class="bg-[#11161f] border border-cyan-500/30 rounded-2xl p-5 shadow-xl space-y-3">
                 <div>
                     <h2 class="text-sm font-bold tracking-wider uppercase text-white">Live Speaker / Mount Coordinate Schedule</h2>
-                    <p class="text-xs text-slate-400">Live mounting-bracket set-out dimensions, actual MLP aiming and distance, and target/reference angles. Recalculates with room, MLP, methodology, mount and orientation changes.</p>
+                    <p class="text-xs text-slate-400">Live wall offsets, bracket set-out dimensions, mounting heights, actual MLP aiming and distance, and target/reference angles. Recalculates with room, MLP, methodology, mount and orientation changes.</p>
+                    <div class="flex flex-wrap gap-x-4 gap-y-1 text-[10px] mt-2"><span style="color:#3b82f6">● Front L/R</span><span style="color:#22d3ee">● Center</span><span style="color:#f59e0b">● Subwoofer</span><span style="color:#a78bfa">● Side surrounds</span><span style="color:#c084fc">● Rear surrounds</span><span style="color:#34d399">● Atmos</span></div>
                 </div>
                 <div id="liveSpeakerMountSchedule" class="overflow-x-auto text-xs"></div>
             </section>
@@ -3880,7 +3881,7 @@
             const frontAtmosZ=meanBracketZ(['TFL','TFR']), rearAtmosZ=meanBracketZ(['TRL','TRR']);
             const frontBulkheadOffset=arch.bhStart-frontAtmosZ, rearBulkheadOffset=rearAtmosZ-arch.bhEnd;
             const livePlacementRows = [
-                {ids:['FL','FR'],group:'Front Left / Right Speakers',instruction:'Speaker mounting brackets should be located '+fmtFtIn(frontZ)+' from the front wall, with '+pairWidth('FL','FR')+' between bracket centers. '+heightText(['FL','FR']),mlp:liveAngleLine(['FL','FR']),target:'±28.5° horizontal azimuth target; toe-in toward the MLP.'},
+                {ids:['FL','FR'],group:'Front Left / Right Speakers',instruction:'Speakers should be located '+fmtFtIn(meanSpeakerZ(['FL','FR']))+' from the front wall. Mounting brackets should be located '+fmtFtIn(frontZ)+' from the front wall, with '+pairWidth('FL','FR')+' between bracket centers. '+heightText(['FL','FR']),mlp:liveAngleLine(['FL','FR']),target:'±28.5° horizontal azimuth target; toe-in toward the MLP.'},
                 {ids:['C'],group:'Center Speaker',instruction:'Speaker should be located '+fmtFtIn(meanSpeakerZ(['C']))+' from the front wall and centered on the room centerline. '+heightText(['C']),mlp:liveAngleLine(['C']),target:'0° horizontal azimuth; aimed at seated ear position.'},
                 {ids:['SL','SR'],group:'Side Surround Speakers',instruction:'Speakers should be located '+fmtFtIn(state.roomW/2+meanSpeakerX(['SL']))+' from the left wall (SL) and '+fmtFtIn(state.roomW/2-meanSpeakerX(['SR']))+' from the right wall (SR), with '+pairWidth('SL','SR')+' between bracket centers. '+heightText(['SL','SR']),mlp:liveAngleLine(['SL','SR']),target:'93° horizontal azimuth target; maintain the modeled 3-inch wall clearance.'},
                 {ids:['SBL','SBR'],group:'Rear Surround Speakers',instruction:'Speakers should be located '+fmtFtIn(state.roomD-meanSpeakerZ(['SBL','SBR']))+' from the rear wall, with '+pairWidth('SBL','SBR')+' between bracket centers. '+heightText(['SBL','SBR']),mlp:liveAngleLine(['SBL','SBR']),target:'145° horizontal azimuth target; aim toward the weighted listening target.'},
