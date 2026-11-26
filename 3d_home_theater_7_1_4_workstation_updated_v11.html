@@ -3881,6 +3881,7 @@
                 const avg=key=>valid.reduce((s,ch)=>s+ch[key],0)/valid.length;
                 return 'Pair avg: Az '+avg('azDeg').toFixed(1)+'° | Elev '+avg('elevDeg').toFixed(1)+'° | '+fmtFtIn(avg('dist3D'))+' to MLP';
             };
+            const meanBracketZ = ids => mean(ids, id => bracket(id)?.z ?? speaker(id)?.z);
             const frontZ = meanBracketZ(['FL','FR']), sideZ=meanBracketZ(['SL','SR']), rearZ=meanBracketZ(['SBL','SBR']);
             const frontAtmosZ=meanBracketZ(['TFL','TFR']), rearAtmosZ=meanBracketZ(['TRL','TRR']);
             const frontBulkheadOffset=arch.bhStart-frontAtmosZ, rearBulkheadOffset=rearAtmosZ-arch.bhEnd;
