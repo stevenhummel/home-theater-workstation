@@ -4789,35 +4789,80 @@ function printConstructionBlueprint(){if(!constructionBlueprintSVG)renderConstru
                 const mx=(p1.x+p2.x)/2, my=(p1.y+p2.y)/2+dy;
                 return '<line class="'+cls+'" x1="'+p1.x.toFixed(1)+'" y1="'+p1.y.toFixed(1)+'" x2="'+p2.x.toFixed(1)+'" y2="'+p2.y.toFixed(1)+'"/><text class="dim-label" x="'+mx.toFixed(1)+'" y="'+my.toFixed(1)+'">'+label+'</text>';
             };
+            // Vertical construction dimensions are drawn in screen space so they remain
+            // legible in the top-down camera, where true 3D verticals project to a point.
+            const verticalCallout = (point,label,offset=42) => {
+                const p=project(point); if(!p.visible) return '';
+                const x=Math.max(18,Math.min(width-18,p.x+offset));
+                const y1=Math.max(105,Math.min(height-38,p.y-24));
+                const y2=y1+42;
+                return '<line class="dim-ext" x1="'+p.x.toFixed(1)+'" y1="'+p.y.toFixed(1)+'" x2="'+x.toFixed(1)+'" y2="'+(y1+21).toFixed(1)+'"/><line class="dim-line" x1="'+x.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x.toFixed(1)+'" y2="'+y2.toFixed(1)+'"/><line class="dim-line" x1="'+(x-5).toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+(x+5).toFixed(1)+'" y2="'+y1.toFixed(1)+'"/><line class="dim-line" x1="'+(x-5).toFixed(1)+'" y1="'+y2.toFixed(1)+'" x2="'+(x+5).toFixed(1)+'" y2="'+y2.toFixed(1)+'"/><text class="dim-label" text-anchor="start" x="'+(x+9).toFixed(1)+'" y="'+(y1+25).toFixed(1)+'">'+label+'</text>';
+            };
             const half=state.roomW/2, d=state.roomD, h=state.ceilH;
             const parts=[];
             // Overall room dimensions and primary architectural offsets.
             parts.push(line({x:-half,y:1,z:0},{x:half,y:1,z:0},'ROOM WIDTH  '+engineeringFmtInches(state.roomW),'dim-line',-12));
             parts.push(line({x:-half-10,y:1,z:0},{x:-half-10,y:1,z:d},'ROOM DEPTH  '+engineeringFmtInches(d),'dim-line',-8));
             parts.push(line({x:-half+8,y:1,z:0},{x:-half+8,y:h,z:0},'CEILING  '+engineeringFmtInches(h),'dim-line',-8));
-            const bhStart=Number(ARCH.bulkheadStartZ ?? 96), bhDepth=Number(ARCH.bulkheadDepth ?? 72);
+            const arch=computeArchitecturalObstructions();
+            const bhStart=arch.bhStart, bhDepth=state.bhSpan;
             parts.push(line({x:-half,y:2,z:bhStart},{x:half,y:2,z:bhStart},'BULKHEAD WIDTH  '+engineeringFmtInches(state.roomW),'dim-line',-10));
             parts.push(line({x:half-8,y:2,z:bhStart},{x:half-8,y:2,z:Math.min(d,bhStart+bhDepth)},'BULKHEAD DEPTH  '+engineeringFmtInches(bhDepth),'dim-line',-8));
             parts.push(line({x:half-14,y:1,z:0},{x:half-14,y:1,z:bhStart},'FRONT WALL → BULKHEAD  '+engineeringFmtInches(bhStart),'dim-line',-8));
             parts.push(line({x:half-20,y:1,z:bhStart+bhDepth},{x:half-20,y:1,z:d},'BULKHEAD → REAR WALL  '+engineeringFmtInches(d-bhStart-bhDepth),'dim-line',-8));
-            // Recessed-light set-out dimensions, matching the live model's exact light coordinates.
+
+            // Recessed-light locations: edge-to-wall set-out as well as row spacing.
             const outer=half-30, inner=outer-48, frontZ=48, rearZ=d-20;
             parts.push(line({x:-inner,y:h-1,z:frontZ},{x:inner,y:h-1,z:frontZ},'FRONT INNER LIGHT SPAN  '+engineeringFmtInches(inner*2),'dim-line',-10));
             parts.push(line({x:-outer,y:h-1,z:frontZ},{x:-inner,y:h-1,z:frontZ},'48.0"','dim-line',-10));
             parts.push(line({x:inner,y:h-1,z:frontZ},{x:outer,y:h-1,z:frontZ},'48.0"','dim-line',-10));
+            parts.push(line({x:0,y:h-1,z:0},{x:0,y:h-1,z:frontZ},'FRONT WALL → FRONT LIGHT ROW  '+engineeringFmtInches(frontZ),'dim-line',-10));
+            parts.push(line({x:0,y:h-1,z:rearZ},{x:0,y:h-1,z:d},'REAR LIGHT ROW → REAR WALL  '+engineeringFmtInches(d-rearZ),'dim-line',-10));
             parts.push(line({x:0,y:h-1,z:frontZ},{x:0,y:h-1,z:rearZ},'LIGHT ROW SPACING  '+engineeringFmtInches(rearZ-frontZ),'dim-line',-10));
-            // MLP set-out and key speaker-pair center-to-center dimensions.
             parts.push(line({x:0,y:1,z:0},{x:0,y:1,z:state.mlpZ},'FRONT WALL → MLP  '+engineeringFmtInches(state.mlpZ),'dim-line',-10));
+
             try {
                 const layout=computeMethodologyLayout(state.standard);
                 const byId=Object.fromEntries(layout.channels.map(c=>[c.id,c]));
-                [['FL','FR','FRONT L/R C-C'],['SL','SR','SIDE SURROUNDS C-C'],['SBL','SBR','REAR SURROUNDS C-C'],['TFL','TFR','TOP FRONT C-C'],['TRL','TRR','TOP REAR C-C']].forEach(([a,b,label])=>{
+                // Side surrounds are dimensioned from the front-wall datum, not to each other.
+                ['SL','SR'].forEach(id=>{
+                    const c=byId[id]; if(c) parts.push(line({x:c.x,y:1,z:0},{x:c.x,y:1,z:c.z},id+' • FRONT WALL → SPEAKER CENTER  '+engineeringFmtInches(c.z),'dim-line',-12));
+                });
+                // Pair spacing for both overhead rows.
+                [['TFL','TFR','TOP FRONT ATMOS C-C'],['TRL','TRR','TOP REAR ATMOS C-C']].forEach(([a,b,label])=>{
                     if(byId[a]&&byId[b]) {
                         const p=byId[a],q=byId[b],dist=Math.hypot(p.x-q.x,p.y-q.y,p.z-q.z);
                         parts.push(line({x:p.x,y:p.y,z:p.z},{x:q.x,y:q.y,z:q.z},label+'  '+engineeringFmtInches(dist),'dim-line',-12));
                     }
                 });
-            } catch(e) {}
+                // Tweeter/acoustic-center height above finished floor for all bed speakers.
+                ['FL','C','FR','SL','SR','SBL','SBR'].forEach(id=>{
+                    const c=byId[id]; if(c) parts.push(verticalCallout({x:c.x,y:c.y,z:c.z},id+' CENTER → FLOOR  '+engineeringFmtInches(c.y),id==='C'||id==='FR'?48:-42));
+                });
+                // Atmos acoustic-center height is referenced to the underside of the bulkhead.
+                ['TFL','TFR','TRL','TRR'].forEach((id,index)=>{
+                    const c=byId[id]; if(c) {
+                        const delta=Math.abs(arch.bhClearY-c.y);
+                        parts.push(verticalCallout({x:c.x,y:c.y,z:c.z},id+' CENTER ↔ BULKHEAD UNDERSIDE  '+engineeringFmtInches(delta),index%2?48:-48));
+                    }
+                });
+            } catch(e) { console.warn('Blueprint speaker dimensions',e); }
+
+            // Edge-to-edge clear gaps between consecutive acoustic panels / bass traps on each wall.
+            try {
+                const layout=computeMethodologyLayout(state.standard);
+                const treatments=computeAcousticTreatments(layout);
+                ['Left Wall','Right Wall'].forEach(wall=>{
+                    const items=treatments.panels.filter(p=>p.render!==false && (wall==='Left Wall'?(p.wall==='Left Wall'||p.wall==='Left Door'):p.wall==='Right Wall')).sort((a,b)=>a.z-b.z);
+                    for(let i=0;i<items.length-1;i++){
+                        const a=items[i],b=items[i+1];
+                        const gap=(b.z-b.w/2)-(a.z+a.w/2);
+                        const x=wall==='Left Wall'?-half+5:half-5;
+                        parts.push(line({x,y:1,z:a.z+a.w/2},{x,y:1,z:b.z-b.w/2},a.id+' → '+b.id+' CLEAR GAP  '+engineeringFmtInches(gap),'dim-line',-9));
+                    }
+                });
+            } catch(e) { console.warn('Blueprint treatment dimensions',e); }
+
             const header='<rect x="12" y="12" width="430" height="76" rx="5" fill="#07111c" fill-opacity=".92" stroke="#155e75"/><text class="dim-note" x="26" y="34">HOME THEATER — ENGINEERING DIMENSION VIEW</text><text class="dim-label" text-anchor="start" x="26" y="55">ROOM  '+engineeringFmtInches(state.roomW)+' × '+engineeringFmtInches(d)+'  •  CEILING '+engineeringFmtInches(h)+'</text><text class="dim-note" x="26" y="75">ALL DIMENSIONS LIVE • FEET + INCHES • MODEL DATUM: FRONT WALL / ROOM CENTERLINE</text>';
             svg.innerHTML=header+parts.join('');
         }
