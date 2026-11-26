@@ -3477,9 +3477,11 @@
             // Preserve the existing left-to-right fixture spacing.
             const lightXCols = [-76.0, -24.0, 24.0, 76.0];
             const frontLightZ = 48.0;
-            const recessedLights = lightXCols.map((x, idx) => ({
-                id: `DL-F-${idx + 1}`, x, z: frontLightZ, y: ceilH, zone: 'Single Front Row — 48 in from Front Wall'
-            }));
+            const rearLightZ = depth - 20.0;
+            const recessedLights = [
+                ...lightXCols.map((x, idx) => ({ id: `DL-F-${idx + 1}`, x, z: frontLightZ, y: ceilH, zone: 'Front Row — 48 in from Front Wall' })),
+                ...lightXCols.map((x, idx) => ({ id: `DL-R-${idx + 1}`, x, z: rearLightZ, y: ceilH, zone: 'Rear Row Behind Bulkhead' }))
+            ];
 
             const matHaloTrim = new THREE.MeshStandardMaterial({
                 color: 0xf8fafc,
@@ -3495,7 +3497,7 @@
             });
 
             const representativeLightXs = [-50.0, 50.0];
-            const representativeLightZs = [frontLightZ];
+            const representativeLightZs = [frontLightZ, rearLightZ];
             if (state.recessedLightsOn) {
                 representativeLightZs.forEach((lz) => {
                     const ly = ceilH - 2.0;
@@ -4261,8 +4263,8 @@ function renderConstructionBlueprint(){
  const layout=computeMethodologyLayout(state.standard),treat=computeAcousticTreatments(layout),arch=treat.arch,chs=layout.channels,panels=treat.panels;
  const scale=Math.min(760/state.roomW,1040/state.roomD),rw=state.roomW*scale,rd=state.roomD*scale,ox=125+(760-rw)/2,oy=120,X=x=>ox+(x+state.roomW/2)*scale,Z=z=>oy+z*scale,f=n=>Number(n).toFixed(1);
  const rearDoorX0=-ARCH.rearDoorW/2,rearDoorX1=ARCH.rearDoorW/2;
- // Four recessed fixtures, one row 48 inches from the front wall; preserve existing X spacing.
- const lights=[-76,-24,24,76].map((x,i)=>({id:'DL-F-'+(i+1),x,z:48,zone:'Single front row — 48 in from front wall'}));
+ // Eight recessed fixtures: one four-light front row at 48 inches, plus the unchanged four-light rear row.
+ const lights=[-76,-24,24,76].flatMap((x,i)=>[{id:'DL-F-'+(i+1),x,z:48,zone:'Front row — 48 in from front wall'},{id:'DL-R-'+(i+1),x,z:state.roomD-20,zone:'Rear row behind bulkhead'}]);
  let s='<svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 1000 '+Math.ceil(rd+300)+'"><defs><marker id="bpArrow" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto"><path d="M7 0 L0 3.5 L7 7" fill="none" stroke="#334155" stroke-width="1"/></marker></defs><rect width="100%" height="100%" fill="white"/><text x="500" y="28" text-anchor="middle" font-size="21" font-weight="bold" fill="#111827">HOME THEATER — FULL ROOM CONSTRUCTION PLAN</text><text x="500" y="51" text-anchor="middle" font-size="12" fill="#475569">'+f(state.roomW)+' in × '+f(state.roomD)+' in • ceiling '+f(state.ceilH)+' in • current placement methodology: '+state.standard+'</text>';
  const dim=(x1,y1,x2,y2,label,tx,ty)=>'<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="#334155" stroke-width="1.2" marker-start="url(#bpArrow)" marker-end="url(#bpArrow)"/><text x="'+tx+'" y="'+ty+'" text-anchor="middle" font-size="11" font-weight="bold" fill="#111827">'+label+'</text>';
  s+='<rect x="'+ox+'" y="'+oy+'" width="'+rw+'" height="'+rd+'" fill="#f8fafc" stroke="#111827" stroke-width="5"/><text x="'+(ox+rw/2)+'" y="'+(oy-13)+'" text-anchor="middle" font-size="13" font-weight="bold" fill="#111827">FRONT WALL / SCREEN — Z=0</text><text x="'+(ox+rw/2)+'" y="'+(oy+rd+22)+'" text-anchor="middle" font-size="13" font-weight="bold" fill="#111827">REAR WALL — Z='+f(state.roomD)+'</text>';
