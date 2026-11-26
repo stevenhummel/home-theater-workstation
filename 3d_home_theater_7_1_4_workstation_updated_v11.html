@@ -54,8 +54,7 @@
         #engineeringDimensionOverlay .dim-ext { stroke:#94a3b8; stroke-width:0.85; stroke-dasharray:3 3; fill:none; vector-effect:non-scaling-stroke; }
         #engineeringDimensionOverlay .dim-label { fill:#f8fafc; font:600 12px 'JetBrains Mono',monospace; paint-order:stroke; stroke:#08111c; stroke-width:4px; stroke-linejoin:round; text-anchor:middle; }
         #engineeringDimensionOverlay .dim-note { fill:#a5f3fc; font:600 11px 'JetBrains Mono',monospace; paint-order:stroke; stroke:#08111c; stroke-width:4px; stroke-linejoin:round; }
-        #viewportCard { position:relative; }
-        #btnBlueprintMode.engineering-blueprint-launcher { position:absolute; top:12px; right:16px; z-index:10002; display:inline-flex !important; visibility:visible !important; opacity:1 !important; pointer-events:auto !important; }
+        #btnBlueprintMode.engineering-blueprint-launcher { position:relative; z-index:10002; display:inline-flex !important; visibility:visible !important; opacity:1 !important; pointer-events:auto !important; white-space:nowrap; flex:0 0 auto; }
         #viewportCard.engineering-blueprint-mode { background:#07111c !important; border-color:#164e63 !important; }
         #viewportCard.engineering-blueprint-mode #btnBlueprintMode { position:fixed; top:14px; right:18px; z-index:10002; }
         #viewportCard.engineering-blueprint-mode > div:first-child > div:first-child { display:none !important; }
@@ -392,7 +391,9 @@
                     </div>
                 </div>
 
-                <button id="btnBlueprintMode" onclick="toggleEngineeringBlueprintMode()" class="engineering-blueprint-launcher px-3 py-2 rounded-lg text-xs font-bold bg-cyan-700 hover:bg-cyan-600 text-white border border-cyan-400 shadow-lg transition">Engineering Blueprint</button>
+                        <button id="btnBlueprintMode" onclick="toggleEngineeringBlueprintMode()" class="engineering-blueprint-launcher px-3 py-1.5 rounded-lg text-xs font-bold bg-cyan-700 hover:bg-cyan-600 text-white border border-cyan-400 shadow-lg transition">Engineering Blueprint</button>
+                    </div>
+                </div>
 
                 <div id="threeWrapper" class="relative w-full h-[540px] sm:h-[620px] rounded-xl overflow-hidden bg-[#090c11] border border-slate-800">
                     <canvas id="threeCanvas" class="w-full h-full block cursor-grab active:cursor-grabbing"></canvas>
