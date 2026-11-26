@@ -49,6 +49,25 @@
             box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
         }
 
+        #engineeringDimensionOverlay { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:8; overflow:visible; }
+        #engineeringDimensionOverlay .dim-line { stroke:#67e8f9; stroke-width:1.35; fill:none; vector-effect:non-scaling-stroke; }
+        #engineeringDimensionOverlay .dim-ext { stroke:#94a3b8; stroke-width:0.85; stroke-dasharray:3 3; fill:none; vector-effect:non-scaling-stroke; }
+        #engineeringDimensionOverlay .dim-label { fill:#f8fafc; font:600 12px 'JetBrains Mono',monospace; paint-order:stroke; stroke:#08111c; stroke-width:4px; stroke-linejoin:round; text-anchor:middle; }
+        #engineeringDimensionOverlay .dim-note { fill:#a5f3fc; font:600 11px 'JetBrains Mono',monospace; paint-order:stroke; stroke:#08111c; stroke-width:4px; stroke-linejoin:round; }
+        #viewportCard.engineering-blueprint-mode { background:#07111c !important; border-color:#164e63 !important; }
+        #viewportCard.engineering-blueprint-mode > div:first-child > div:first-child { display:none !important; }
+        #viewportCard.engineering-blueprint-mode > div:first-child { justify-content:flex-end !important; margin:0 !important; position:absolute; z-index:20; top:10px; right:12px; }
+        #viewportCard.engineering-blueprint-mode > div:first-child button:not(#togDistances):not(#btnBlueprintMode) { display:none !important; }
+        #viewportCard.engineering-blueprint-mode #togDistances { display:inline-flex !important; }
+        #viewportCard.engineering-blueprint-mode #threeWrapper { height:100% !important; border:0 !important; border-radius:0 !important; }
+        #viewportCard.engineering-blueprint-mode #threeWrapper > div:not(#engineeringDimensionOverlay) { display:none !important; }
+        #viewportCard.engineering-blueprint-mode #fsDrawer { display:none !important; }
+        #viewportCard.engineering-blueprint-mode #engineeringDimensionOverlay { display:block; }
+        #viewportCard.engineering-blueprint-mode #hudModelName,
+        #viewportCard.engineering-blueprint-mode #hudMountLine,
+        #viewportCard.engineering-blueprint-mode #hudBedLine,
+        #viewportCard.engineering-blueprint-mode #hudBeamLine,
+        #viewportCard.engineering-blueprint-mode #hudConflictLine { display:none !important; }
         .fullscreen-viewport {
             position: fixed !important;
             inset: 0 !important;
@@ -358,6 +377,7 @@
                         <button id="togCones" onclick="toggleLayer('cones')" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-blue-500/20 text-blue-300 border border-blue-500/40 transition">Cones</button>
                         <button id="togBulkhead" onclick="toggleLayer('bulkhead')" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-teal-500/20 text-teal-300 border border-teal-500/40 transition">Bulkhead</button>
                         <button id="togPanels" onclick="toggleLayer('panels')" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-rose-500/20 text-rose-300 border border-rose-500/40 transition">Panels, Doors & Beam</button>
+                        <button id="btnBlueprintMode" onclick="toggleEngineeringBlueprintMode()" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-cyan-700 hover:bg-cyan-600 text-white border border-cyan-500/50 transition">Engineering Blueprint</button>
                         <button id="togLights" onclick="toggleRecessedLights()" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-yellow-400/20 text-yellow-200 border border-yellow-400/50 transition flex items-center gap-1.5">
                             <i class="fa-solid fa-lightbulb text-yellow-300"></i>
                             <span id="lblLightsBtn">Halo 4" Lights: ON (4000K)</span>
@@ -371,6 +391,7 @@
 
                 <div id="threeWrapper" class="relative w-full h-[540px] sm:h-[620px] rounded-xl overflow-hidden bg-[#090c11] border border-slate-800">
                     <canvas id="threeCanvas" class="w-full h-full block cursor-grab active:cursor-grabbing"></canvas>
+                    <svg id="engineeringDimensionOverlay" class="hidden" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg>
 
                     <div class="absolute top-3 left-3 bg-[#0b1018]/90 backdrop-blur-md border border-slate-700/80 rounded-xl p-3 max-w-sm pointer-events-none shadow-lg">
                         <div class="text-[10px] font-mono uppercase tracking-wider text-slate-400">Active 3D Acoustic Model</div>
@@ -2036,6 +2057,7 @@
         let methodologyTransitionTimer = null;
         let isFullscreen = false;
         let isMlpPOV = false;
+        let isEngineeringBlueprintMode = false;
 
         function createPalomarTexture() {
             const canvas = document.createElement('canvas');
@@ -2320,6 +2342,7 @@
             }
 
             controls.update();
+            if (isEngineeringBlueprintMode) updateEngineeringDimensionOverlay();
 
             const isAboveCeiling = camera.position.y > (state.ceilH - 5);
             if (lightPoolGroup) {
@@ -4720,6 +4743,83 @@ function printConstructionBlueprint(){if(!constructionBlueprintSVG)renderConstru
                 }
             }
             controls.update();
+        }
+
+        function engineeringFmtInches(value) {
+            const total = Math.max(0, Math.abs(value));
+            const feet = Math.floor(total / 12);
+            const inches = total - feet * 12;
+            return (value < 0 ? '−' : '') + feet + "' " + inches.toFixed(1) + '"';
+        }
+
+        function toggleEngineeringBlueprintMode(force) {
+            if (!isFullscreen && force !== false) toggleFullscreen();
+            isEngineeringBlueprintMode = typeof force === 'boolean' ? force : !isEngineeringBlueprintMode;
+            const card = document.getElementById('viewportCard');
+            const button = document.getElementById('btnBlueprintMode');
+            card.classList.toggle('engineering-blueprint-mode', isEngineeringBlueprintMode);
+            if (button) button.textContent = isEngineeringBlueprintMode ? 'Exit Blueprint' : 'Engineering Blueprint';
+            if (isEngineeringBlueprintMode) {
+                setCameraView('topdown');
+                const drawer = document.getElementById('fsDrawer');
+                if (drawer) drawer.classList.add('hidden');
+            } else if (isFullscreen) {
+                const drawer = document.getElementById('fsDrawer');
+                if (drawer) drawer.classList.remove('hidden');
+            }
+            setTimeout(onResize, 50);
+            if (isEngineeringBlueprintMode) updateEngineeringDimensionOverlay();
+        }
+
+        function updateEngineeringDimensionOverlay() {
+            const svg = document.getElementById('engineeringDimensionOverlay');
+            const wrapper = document.getElementById('threeWrapper');
+            if (!svg || !wrapper || !camera || !renderer || !isEngineeringBlueprintMode) return;
+            const width = wrapper.clientWidth, height = wrapper.clientHeight;
+            if (!width || !height) return;
+            svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
+            const frontShift = getRoomFrontShiftZ();
+            const project = p => {
+                const v = new THREE.Vector3(p.x, p.y, p.z + frontShift).project(camera);
+                return {x:(v.x * .5 + .5) * width, y:(-v.y * .5 + .5) * height, visible:v.z > -1 && v.z < 1};
+            };
+            const line = (a,b,label,cls='dim-line',dy=-8) => {
+                const p1=project(a),p2=project(b);
+                if (!p1.visible || !p2.visible) return '';
+                const mx=(p1.x+p2.x)/2, my=(p1.y+p2.y)/2+dy;
+                return '<line class="'+cls+'" x1="'+p1.x.toFixed(1)+'" y1="'+p1.y.toFixed(1)+'" x2="'+p2.x.toFixed(1)+'" y2="'+p2.y.toFixed(1)+'"/><text class="dim-label" x="'+mx.toFixed(1)+'" y="'+my.toFixed(1)+'">'+label+'</text>';
+            };
+            const half=state.roomW/2, d=state.roomD, h=state.ceilH;
+            const parts=[];
+            // Overall room dimensions and primary architectural offsets.
+            parts.push(line({x:-half,y:1,z:0},{x:half,y:1,z:0},'ROOM WIDTH  '+engineeringFmtInches(state.roomW),'dim-line',-12));
+            parts.push(line({x:-half-10,y:1,z:0},{x:-half-10,y:1,z:d},'ROOM DEPTH  '+engineeringFmtInches(d),'dim-line',-8));
+            parts.push(line({x:-half+8,y:1,z:0},{x:-half+8,y:h,z:0},'CEILING  '+engineeringFmtInches(h),'dim-line',-8));
+            const bhStart=Number(ARCH.bulkheadStartZ ?? 96), bhDepth=Number(ARCH.bulkheadDepth ?? 72);
+            parts.push(line({x:-half,y:2,z:bhStart},{x:half,y:2,z:bhStart},'BULKHEAD WIDTH  '+engineeringFmtInches(state.roomW),'dim-line',-10));
+            parts.push(line({x:half-8,y:2,z:bhStart},{x:half-8,y:2,z:Math.min(d,bhStart+bhDepth)},'BULKHEAD DEPTH  '+engineeringFmtInches(bhDepth),'dim-line',-8));
+            parts.push(line({x:half-14,y:1,z:0},{x:half-14,y:1,z:bhStart},'FRONT WALL → BULKHEAD  '+engineeringFmtInches(bhStart),'dim-line',-8));
+            parts.push(line({x:half-20,y:1,z:bhStart+bhDepth},{x:half-20,y:1,z:d},'BULKHEAD → REAR WALL  '+engineeringFmtInches(d-bhStart-bhDepth),'dim-line',-8));
+            // Recessed-light set-out dimensions, matching the live model's exact light coordinates.
+            const outer=half-30, inner=outer-48, frontZ=48, rearZ=d-20;
+            parts.push(line({x:-inner,y:h-1,z:frontZ},{x:inner,y:h-1,z:frontZ},'FRONT INNER LIGHT SPAN  '+engineeringFmtInches(inner*2),'dim-line',-10));
+            parts.push(line({x:-outer,y:h-1,z:frontZ},{x:-inner,y:h-1,z:frontZ},'48.0"','dim-line',-10));
+            parts.push(line({x:inner,y:h-1,z:frontZ},{x:outer,y:h-1,z:frontZ},'48.0"','dim-line',-10));
+            parts.push(line({x:0,y:h-1,z:frontZ},{x:0,y:h-1,z:rearZ},'LIGHT ROW SPACING  '+engineeringFmtInches(rearZ-frontZ),'dim-line',-10));
+            // MLP set-out and key speaker-pair center-to-center dimensions.
+            parts.push(line({x:0,y:1,z:0},{x:0,y:1,z:state.mlpZ},'FRONT WALL → MLP  '+engineeringFmtInches(state.mlpZ),'dim-line',-10));
+            try {
+                const layout=computeMethodologyLayout(state.standard);
+                const byId=Object.fromEntries(layout.channels.map(c=>[c.id,c]));
+                [['FL','FR','FRONT L/R C-C'],['SL','SR','SIDE SURROUNDS C-C'],['SBL','SBR','REAR SURROUNDS C-C'],['TFL','TFR','TOP FRONT C-C'],['TRL','TRR','TOP REAR C-C']].forEach(([a,b,label])=>{
+                    if(byId[a]&&byId[b]) {
+                        const p=byId[a],q=byId[b],dist=Math.hypot(p.x-q.x,p.y-q.y,p.z-q.z);
+                        parts.push(line({x:p.x,y:p.y,z:p.z},{x:q.x,y:q.y,z:q.z},label+'  '+engineeringFmtInches(dist),'dim-line',-12));
+                    }
+                });
+            } catch(e) {}
+            const header='<rect x="12" y="12" width="430" height="76" rx="5" fill="#07111c" fill-opacity=".92" stroke="#155e75"/><text class="dim-note" x="26" y="34">HOME THEATER — ENGINEERING DIMENSION VIEW</text><text class="dim-label" text-anchor="start" x="26" y="55">ROOM  '+engineeringFmtInches(state.roomW)+' × '+engineeringFmtInches(d)+'  •  CEILING '+engineeringFmtInches(h)+'</text><text class="dim-note" x="26" y="75">ALL DIMENSIONS LIVE • FEET + INCHES • MODEL DATUM: FRONT WALL / ROOM CENTERLINE</text>';
+            svg.innerHTML=header+parts.join('');
         }
 
         function toggleFullscreen() {
