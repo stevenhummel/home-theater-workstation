@@ -54,7 +54,10 @@
         #engineeringDimensionOverlay .dim-ext { stroke:#94a3b8; stroke-width:0.85; stroke-dasharray:3 3; fill:none; vector-effect:non-scaling-stroke; }
         #engineeringDimensionOverlay .dim-label { fill:#f8fafc; font:600 12px 'JetBrains Mono',monospace; paint-order:stroke; stroke:#08111c; stroke-width:4px; stroke-linejoin:round; text-anchor:middle; }
         #engineeringDimensionOverlay .dim-note { fill:#a5f3fc; font:600 11px 'JetBrains Mono',monospace; paint-order:stroke; stroke:#08111c; stroke-width:4px; stroke-linejoin:round; }
+        #viewportCard { position:relative; }
+        #btnBlueprintMode.engineering-blueprint-launcher { position:absolute; top:12px; right:16px; z-index:10002; display:inline-flex !important; visibility:visible !important; opacity:1 !important; pointer-events:auto !important; }
         #viewportCard.engineering-blueprint-mode { background:#07111c !important; border-color:#164e63 !important; }
+        #viewportCard.engineering-blueprint-mode #btnBlueprintMode { position:fixed; top:14px; right:18px; z-index:10002; }
         #viewportCard.engineering-blueprint-mode > div:first-child > div:first-child { display:none !important; }
         #viewportCard.engineering-blueprint-mode > div:first-child { justify-content:flex-end !important; margin:0 !important; position:absolute; z-index:20; top:10px; right:12px; }
         #viewportCard.engineering-blueprint-mode > div:first-child button:not(#togDistances):not(#btnBlueprintMode) { display:none !important; }
@@ -377,7 +380,7 @@
                         <button id="togCones" onclick="toggleLayer('cones')" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-blue-500/20 text-blue-300 border border-blue-500/40 transition">Cones</button>
                         <button id="togBulkhead" onclick="toggleLayer('bulkhead')" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-teal-500/20 text-teal-300 border border-teal-500/40 transition">Bulkhead</button>
                         <button id="togPanels" onclick="toggleLayer('panels')" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-rose-500/20 text-rose-300 border border-rose-500/40 transition">Panels, Doors & Beam</button>
-                        <button id="btnBlueprintMode" onclick="toggleEngineeringBlueprintMode()" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-cyan-700 hover:bg-cyan-600 text-white border border-cyan-500/50 transition">Engineering Blueprint</button>
+                        
                         <button id="togLights" onclick="toggleRecessedLights()" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-yellow-400/20 text-yellow-200 border border-yellow-400/50 transition flex items-center gap-1.5">
                             <i class="fa-solid fa-lightbulb text-yellow-300"></i>
                             <span id="lblLightsBtn">Halo 4" Lights: ON (4000K)</span>
@@ -388,6 +391,8 @@
                         </button>
                     </div>
                 </div>
+
+                <button id="btnBlueprintMode" onclick="toggleEngineeringBlueprintMode()" class="engineering-blueprint-launcher px-3 py-2 rounded-lg text-xs font-bold bg-cyan-700 hover:bg-cyan-600 text-white border border-cyan-400 shadow-lg transition">Engineering Blueprint</button>
 
                 <div id="threeWrapper" class="relative w-full h-[540px] sm:h-[620px] rounded-xl overflow-hidden bg-[#090c11] border border-slate-800">
                     <canvas id="threeCanvas" class="w-full h-full block cursor-grab active:cursor-grabbing"></canvas>
@@ -2058,6 +2063,7 @@
         let isFullscreen = false;
         let isMlpPOV = false;
         let isEngineeringBlueprintMode = false;
+        let engineeringBlueprintPreviousCones = null;
 
         function createPalomarTexture() {
             const canvas = document.createElement('canvas');
@@ -3560,7 +3566,7 @@
                 ringOutline.visible = camera.position.y > (ceilH - 5);
                 dlGroup.add(ringOutline);
 
-                if (state.recessedLightsOn) {
+                if (state.recessedLightsOn && !isEngineeringBlueprintMode) {
                     const beamH = dl.y - 4.0;
                     const washGeo = new THREE.ConeGeometry(28.0, beamH, 24, 1, true);
                     washGeo.translate(0, -beamH / 2, 0);
@@ -4753,8 +4759,16 @@ function printConstructionBlueprint(){if(!constructionBlueprintSVG)renderConstru
         }
 
         function toggleEngineeringBlueprintMode(force) {
-            if (!isFullscreen && force !== false) toggleFullscreen();
-            isEngineeringBlueprintMode = typeof force === 'boolean' ? force : !isEngineeringBlueprintMode;
+            const nextMode = typeof force === 'boolean' ? force : !isEngineeringBlueprintMode;
+            if (nextMode && !isFullscreen) toggleFullscreen();
+            if (nextMode && !isEngineeringBlueprintMode) {
+                engineeringBlueprintPreviousCones = state.layers.cones;
+                state.layers.cones = false;
+            } else if (!nextMode && isEngineeringBlueprintMode && engineeringBlueprintPreviousCones !== null) {
+                state.layers.cones = engineeringBlueprintPreviousCones;
+                engineeringBlueprintPreviousCones = null;
+            }
+            isEngineeringBlueprintMode = nextMode;
             const card = document.getElementById('viewportCard');
             const button = document.getElementById('btnBlueprintMode');
             card.classList.toggle('engineering-blueprint-mode', isEngineeringBlueprintMode);
@@ -4767,6 +4781,7 @@ function printConstructionBlueprint(){if(!constructionBlueprintSVG)renderConstru
                 const drawer = document.getElementById('fsDrawer');
                 if (drawer) drawer.classList.remove('hidden');
             }
+            updateAll();
             setTimeout(onResize, 50);
             if (isEngineeringBlueprintMode) updateEngineeringDimensionOverlay();
         }
@@ -4853,7 +4868,12 @@ function printConstructionBlueprint(){if(!constructionBlueprintSVG)renderConstru
                 const layout=computeMethodologyLayout(state.standard);
                 const treatments=computeAcousticTreatments(layout);
                 ['Left Wall','Right Wall'].forEach(wall=>{
-                    const items=treatments.panels.filter(p=>p.render!==false && (wall==='Left Wall'?(p.wall==='Left Wall'||p.wall==='Left Door'):p.wall==='Right Wall')).sort((a,b)=>a.z-b.z);
+                    const items=treatments.panels.filter(p=>p.render!==false && (wall==='Left Wall'?(p.wall==='Left Wall'||p.wall==='Left Door'||p.id==='BT-L'):(p.wall==='Right Wall'||p.id==='BT-R'))).sort((a,b)=>a.z-b.z);
+                    items.forEach(item=>{
+                        const bottomY=item.y-item.h/2;
+                        const x=wall==='Left Wall'?-half+5:half-5;
+                        parts.push(verticalCallout({x:item.x,y:bottomY,z:item.z},item.id+' BOTTOM → FLOOR  '+engineeringFmtInches(bottomY),wall==='Left Wall'?-46:46));
+                    });
                     for(let i=0;i<items.length-1;i++){
                         const a=items[i],b=items[i+1];
                         const gap=(b.z-b.w/2)-(a.z+a.w/2);
