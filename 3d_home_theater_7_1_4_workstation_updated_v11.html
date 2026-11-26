@@ -3855,7 +3855,6 @@
             const fmtOffset = n => fmtFtIn(Math.abs(n))+' '+(n>=0?'from':'inside/overlapping') ;
             const speakerColors={FL:'#3b82f6',FR:'#3b82f6',C:'#22d3ee',SUB1:'#f59e0b',SUB2:'#f59e0b',SL:'#a78bfa',SR:'#a78bfa',SBL:'#c084fc',SBR:'#c084fc',TFL:'#34d399',TFR:'#34d399',TRL:'#10b981',TRR:'#10b981'};
             const groupColor=(ids)=>speakerColors[ids[0]]||'#cbd5e1';
-            const speakerColors={FL:'#3b82f6',FR:'#3b82f6',C:'#22d3ee',SUB1:'#f59e0b',SUB2:'#f59e0b',SL:'#a78bfa',SR:'#a78bfa',SBL:'#c084fc',SBR:'#c084fc',TFL:'#34d399',TFR:'#34d399',TRL:'#10b981',TRR:'#10b981'};
             const groupColor=(ids)=>speakerColors[ids[0]]||'#cbd5e1';
             const mean = (ids, getter) => ids.map(id=>getter(id)).filter(Number.isFinite).reduce((a,b)=>a+b,0)/Math.max(1,ids.map(id=>getter(id)).filter(Number.isFinite).length);
             const speaker = id => layout.channels.find(x=>x.id===id);
