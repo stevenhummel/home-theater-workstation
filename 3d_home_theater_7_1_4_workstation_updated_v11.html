@@ -3474,9 +3474,9 @@
             }
 
             // Four recessed lights per row: outer fixtures 30 inches from side walls,
-            // with 52 inches between each outer fixture and its neighboring inner fixture.
+            // with 48 inches between each outer fixture and its neighboring inner fixture, creating a 72-inch center gap.
             const outerLightX = state.roomW / 2 - 30.0;
-            const innerLightX = outerLightX - 52.0;
+            const innerLightX = outerLightX - 48.0;
             const lightXCols = [-outerLightX, -innerLightX, innerLightX, outerLightX];
             const frontLightZ = 48.0;
             const rearLightZ = depth - 20.0;
@@ -4266,7 +4266,7 @@ function renderConstructionBlueprint(){
  const scale=Math.min(760/state.roomW,1040/state.roomD),rw=state.roomW*scale,rd=state.roomD*scale,ox=125+(760-rw)/2,oy=120,X=x=>ox+(x+state.roomW/2)*scale,Z=z=>oy+z*scale,f=n=>Number(n).toFixed(1);
  const rearDoorX0=-ARCH.rearDoorW/2,rearDoorX1=ARCH.rearDoorW/2;
  // Eight recessed fixtures: one four-light front row at 48 inches, plus the unchanged four-light rear row.
- const outerLightX=state.roomW/2-30,innerLightX=outerLightX-52;
+ const outerLightX=state.roomW/2-30,innerLightX=outerLightX-48;
  const lightXCols=[-outerLightX,-innerLightX,innerLightX,outerLightX];
  const lights=lightXCols.flatMap((x,i)=>[{id:'DL-F-'+(i+1),x,z:48,zone:'Front row — 48 in from front wall'},{id:'DL-R-'+(i+1),x,z:state.roomD-20,zone:'Rear row behind bulkhead'}]);
  let s='<svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 1000 '+Math.ceil(rd+300)+'"><defs><marker id="bpArrow" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto"><path d="M7 0 L0 3.5 L7 7" fill="none" stroke="#334155" stroke-width="1"/></marker></defs><rect width="100%" height="100%" fill="white"/><text x="500" y="28" text-anchor="middle" font-size="21" font-weight="bold" fill="#111827">HOME THEATER — FULL ROOM CONSTRUCTION PLAN</text><text x="500" y="51" text-anchor="middle" font-size="12" fill="#475569">'+f(state.roomW)+' in × '+f(state.roomD)+' in • ceiling '+f(state.ceilH)+' in • current placement methodology: '+state.standard+'</text>';
