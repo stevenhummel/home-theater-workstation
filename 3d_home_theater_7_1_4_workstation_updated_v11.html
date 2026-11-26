@@ -3860,8 +3860,8 @@
             const mean = (ids, getter) => ids.map(id=>getter(id)).filter(Number.isFinite).reduce((a,b)=>a+b,0)/Math.max(1,ids.map(id=>getter(id)).filter(Number.isFinite).length);
             const speaker = id => layout.channels.find(x=>x.id===id);
             const bracket = id => recById[id]?.bracket;
-            const wallFromLeft = (id, isBracket=false) => state.roomW/2-(isBracket?bracket(id)?.x:speaker(id)?.x);
-            const wallFromRight = (id, isBracket=false) => state.roomW/2+(isBracket?bracket(id)?.x:speaker(id)?.x);
+            const wallFromLeft = (id, isBracket=false) => state.roomW/2+(isBracket?bracket(id)?.x:speaker(id)?.x);
+            const wallFromRight = (id, isBracket=false) => state.roomW/2-(isBracket?bracket(id)?.x:speaker(id)?.x);
             const frontFromWall = (id, isBracket=false) => isBracket?bracket(id)?.z:speaker(id)?.z;
             const rearFromWall = (id, isBracket=false) => state.roomD-(isBracket?bracket(id)?.z:speaker(id)?.z);
             const bottomBracketAFF = id => {
