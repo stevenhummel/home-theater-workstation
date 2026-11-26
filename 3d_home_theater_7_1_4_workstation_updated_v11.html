@@ -142,8 +142,9 @@
                             <div class="text-xs font-bold uppercase tracking-wider text-cyan-300">Adaptive Expert — Design Principles & Evaluation</div>
                             <div class="text-[10px] text-slate-400 mt-1">Optimizer decides placement • independent principles audit the result</div>
                         </div>
-                        <span id="methodologyAuthorityBadge" class="text-[10px] font-mono px-2 py-1 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">MLP optimizer primary</span>
+                        <div class="flex items-center gap-2"><span id="methodologyAuthorityBadge" class="text-[10px] font-mono px-2 py-1 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">MLP optimizer primary</span><button id="btnToggleMethodologyArchitecture" onclick="toggleMethodologyArchitecture()" class="no-print text-[10px] font-semibold px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200">Minimize</button></div>
                     </div>
+                    <div id="methodologyArchitectureContent" class="space-y-3">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10px]">
                         <div class="rounded-lg bg-[#0d1118] border border-slate-700/70 p-2"><b class="text-white">Grimani · System integration</b><p class="text-slate-400 mt-1">Evaluate the bed layer and overhead array as one coordinated sound field; inspect channel geometry and transitions, not isolated angles alone.</p></div>
                         <div class="rounded-lg bg-[#0d1118] border border-slate-700/70 p-2"><b class="text-white">Home Theater Gurus · Acoustic practicality</b><p class="text-slate-400 mt-1">For this 7.1.4 layout, assess HTM-200SE2 side-surround aiming and measured horizontal/vertical directivity separately from the dedicated rear-surround pair. Its broad dispersion supports coverage across the sofa; do not import 5.1.4 rearward side-surround angles. Room reflections and installation compromises remain relevant.</p></div>
@@ -156,6 +157,7 @@
                         <div id="methodologyAuditTable" class="overflow-x-auto text-[10px] text-slate-300"></div>
                     </div>
                     <p class="text-[10px] leading-relaxed text-slate-500">Evidence labels are deliberate: geometric checks are calculated from the current model; acoustic/directivity and calibration items remain estimates or unmodeled until measured speaker data, room measurements, and Dirac results are supplied. Reference methodologies audit the selected layout; they do not vote on or overwrite its coordinates.</p>
+                    </div>
                 </div>
 
                 <div class="pt-3 border-t border-slate-800/80">
@@ -475,6 +477,15 @@
                 </div>
 
                 <div id="rationaleCardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5"></div>
+            </section>
+
+            <!-- LIVE SPEAKER / MOUNT COORDINATE CHART -->
+            <section class="bg-[#11161f] border border-cyan-500/30 rounded-2xl p-5 shadow-xl space-y-3">
+                <div>
+                    <h2 class="text-sm font-bold tracking-wider uppercase text-white">Live Speaker / Mount Coordinate Schedule</h2>
+                    <p class="text-xs text-slate-400">Live mounting-bracket set-out dimensions, actual MLP aiming and distance, and target/reference angles. Recalculates with room, MLP, methodology, mount and orientation changes.</p>
+                </div>
+                <div id="liveSpeakerMountSchedule" class="overflow-x-auto text-xs"></div>
             </section>
 
             <!-- SCHEDULE A: MASTER INSTALLATION SCHEDULE -->
@@ -798,7 +809,8 @@
             expertProfile: 'mlp80',
             ghostStandard: 'none',
             atmosOrient: 'horizontal',
-            atmosMountOpt: 1,
+            atmosMountOpt: 2,
+            methodologyArchitectureCollapsed: false,
             bedMountMode: 'wall',
             subCount: 1,
             showViolations: true,
@@ -3829,6 +3841,37 @@
             const arch = treatments.arch;
             const stdTitle = STANDARDS[state.standard].shortTitle;
 
+            // This contractor-facing chart is the single summary location for
+            // bracket set-out, actual MLP aiming axes and speaker-to-MLP distances.
+            const liveRecords = buildLiveInstallationRecords(layout, arch);
+            const recById = Object.fromEntries(liveRecords.map(r => [r.id, r]));
+            const fmtBracketDistance = (a,b) => {
+                const p=recById[a]?.bracket,q=recById[b]?.bracket;
+                return p&&q?fmtFtIn(Math.hypot(p.x-q.x,p.y-q.y,p.z-q.z)):'NO VALID BRACKET DATUM';
+            };
+            const fmtOffset = n => fmtFtIn(Math.abs(n))+' '+(n>=0?'from':'inside/overlapping') ;
+            const liveAngleLine = ids => ids.map(id => {
+                const ch=layout.channels.find(x=>x.id===id);
+                return ch ? id+': Az '+ch.azDeg.toFixed(1)+'° | Elev '+ch.elevDeg.toFixed(1)+'° | '+fmtFtIn(ch.dist3D)+' to MLP' : id+': —';
+            }).join('<br>');
+            const meanBracketZ = ids => ids.reduce((s,id)=>s+(recById[id]?.bracket?.z ?? layout.channels.find(x=>x.id===id).z),0)/ids.length;
+            const pairWidth = (a,b) => fmtBracketDistance(a,b);
+            const frontZ = meanBracketZ(['FL','FR']), sideZ=meanBracketZ(['SL','SR']), rearZ=meanBracketZ(['SBL','SBR']);
+            const frontAtmosZ=meanBracketZ(['TFL','TFR']), rearAtmosZ=meanBracketZ(['TRL','TRR']);
+            const frontBulkheadOffset=arch.bhStart-frontAtmosZ, rearBulkheadOffset=rearAtmosZ-arch.bhEnd;
+            const livePlacementRows = [
+                {group:'Front Left / Right Speakers',instruction:'Speaker mounting brackets should be located '+fmtFtIn(frontZ)+' from the front wall, with '+pairWidth('FL','FR')+' between bracket centers.',mlp:liveAngleLine(['FL','FR']),target:'±28.5° horizontal azimuth target; toe-in toward the MLP.'},
+                {group:'Center Speaker',instruction:'The center speaker support datum should be centered on the room centerline on the media-console top at '+fmtFtIn(recById.C?.bracket?.y ?? 19.5)+' AFF; this is a support surface, not a wall bracket.',mlp:liveAngleLine(['C']),target:'0° horizontal azimuth; aimed at seated ear position.'},
+                {group:'Side Surround Speakers',instruction:'Speaker mounting brackets should be located '+fmtFtIn(sideZ)+' from the front wall, with '+pairWidth('SL','SR')+' between bracket centers.',mlp:liveAngleLine(['SL','SR']),target:'93° horizontal azimuth target; maintain the modeled 3-inch wall clearance.'},
+                {group:'Rear Surround Speakers',instruction:'Speaker mounting brackets should be located '+fmtFtIn(state.roomD-rearZ)+' from the rear wall, with '+pairWidth('SBL','SBR')+' between bracket centers.',mlp:liveAngleLine(['SBL','SBR']),target:'145° horizontal azimuth target; aim toward the weighted listening target.'},
+                {group:'Front Atmos Speakers',instruction:'Speaker mounting brackets should be located '+fmtFtIn(Math.abs(frontBulkheadOffset))+' '+(frontBulkheadOffset>=0?'forward of':'behind')+' the front bulkhead edge, with '+pairWidth('TFL','TFR')+' between bracket centers.',mlp:liveAngleLine(['TFL','TFR']),target:'45° horizontal azimuth target; 48° elevation reference.'},
+                {group:'Rear Atmos Speakers',instruction:'Speaker mounting brackets should be located '+fmtFtIn(Math.abs(rearBulkheadOffset))+' '+(rearBulkheadOffset>=0?'behind':'forward of')+' the rear bulkhead edge, with '+pairWidth('TRL','TRR')+' between bracket centers.',mlp:liveAngleLine(['TRL','TRR']),target:'135° horizontal azimuth target; 48° elevation reference.'},
+                {group:'Atmos Front-to-Rear Alignment',instruction:'Left front-to-rear Atmos bracket centers should be '+pairWidth('TFL','TRL')+' apart; right front-to-rear bracket centers should be '+pairWidth('TFR','TRR')+' apart.',mlp:'—',target:'Front/rear overhead pairs should remain symmetrical about the room centerline.'}
+            ];
+            const liveTable = '<table class="w-full min-w-[980px] border-collapse"><thead><tr class="text-slate-400 border-b border-slate-700"><th class="p-2 text-left">Speaker group</th><th class="p-2 text-left">Installation instruction</th><th class="p-2 text-left">Actual MLP Aiming & Distance</th><th class="p-2 text-left">Target / reference angles</th></tr></thead><tbody>'+livePlacementRows.map(r=>'<tr class="border-b border-slate-800/80 align-top"><td class="p-2 font-semibold text-white">'+r.group+'</td><td class="p-2 text-slate-300">'+r.instruction+'</td><td class="p-2 font-mono text-amber-300">'+r.mlp+'</td><td class="p-2 text-slate-300">'+r.target+'</td></tr>').join('')+'</tbody></table>';
+            const liveTableHost=document.getElementById('liveSpeakerMountSchedule');
+            if(liveTableHost) liveTableHost.innerHTML=liveTable;
+
             const rows = layout.channels.map(ch => {
                 const atmosRoute = ch.group === 'Atmos' ? getAtmosMountRouteGeometry(ch, arch) : null;
                 const routeLength = atmosRoute && atmosRoute.valid
@@ -3912,7 +3955,6 @@
                             <th class="py-2.5 px-3">ID / Channel</th>
                             <th class="py-2.5 px-3">Coordinates (X, Y, Z)</th>
                             <th class="py-2.5 px-3">Mounting Height / Stand</th>
-                            <th class="py-2.5 px-3">MLP Angle & Dist</th>
                             <th class="py-2.5 px-3">Collision Check</th>
                         </tr>`;
                     tbody.innerHTML = rows.map(r => {
@@ -3922,7 +3964,6 @@
                             <td class="py-2 px-3 font-mono font-bold text-white">${r.id} <span class="font-sans font-normal text-slate-400 block text-[11px]">${r.name}</span></td>
                             <td class="py-2 px-3 font-mono text-xs text-cyan-300">${r.coords}</td>
                             <td class="py-2 px-3 text-xs">${r.mountInfo.split('—')[0]}</td>
-                            <td class="py-2 px-3 font-mono text-xs text-amber-300">${r.aiming}</td>
                             <td class="py-2 px-3 font-semibold ${r.isViolation ? 'text-red-400' : 'text-emerald-400'}">${r.clearance}</td>
                         </tr>`;
                     }).join('');
@@ -3933,7 +3974,6 @@
                             <th class="py-2.5 px-3">X, Y, Z Coordinates & Datum</th>
                             <th class="py-2.5 px-3">Dimensions</th>
                             <th class="py-2.5 px-3">Mounting Height & Hardware</th>
-                            <th class="py-2.5 px-3">MLP Aiming & Distance</th>
                             <th class="py-2.5 px-3">Collision & Clearance Audit</th>
                         </tr>`;
                     tbody.innerHTML = rows.map(r => {
@@ -3950,7 +3990,6 @@
                             </td>
                             <td class="py-2.5 px-3 font-mono text-[11px] text-slate-300">${r.dims}</td>
                             <td class="py-2.5 px-3 text-[11px] text-slate-200 max-w-xs">${r.mountInfo}</td>
-                            <td class="py-2.5 px-3 font-mono text-[11px] text-amber-300">${r.aiming}</td>
                             <td class="py-2.5 px-3 text-[11px] font-semibold ${r.isViolation ? 'text-red-400' : 'text-emerald-400'}">${r.clearance}</td>
                         </tr>`;
                     }).join('');
@@ -4301,6 +4340,14 @@ function renderConstructionBlueprint(){
 }
 function downloadConstructionBlueprintSVG(){if(!constructionBlueprintSVG)renderConstructionBlueprint();const b=new Blob([constructionBlueprintSVG],{type:'image/svg+xml'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='home-theater-construction-blueprint.svg';a.click();URL.revokeObjectURL(u);}
 function printConstructionBlueprint(){if(!constructionBlueprintSVG)renderConstructionBlueprint();const w=window.open('','_blank');if(!w){alert('Allow pop-ups to print the blueprint.');return;}w.document.write('<html><head><title>Home Theater Construction Blueprint</title><style>body{font:11px Arial;margin:15px}svg{width:100%;max-height:75vh}table{border-collapse:collapse;width:100%;font-size:9px}td,th{border:1px solid #aaa;padding:4px;text-align:left}@page{size:landscape;margin:10mm}</style></head><body><h2>Home Theater — 2D Construction Blueprint</h2>'+constructionBlueprintSVG+document.getElementById('constructionBlueprintSchedule').innerHTML+document.getElementById('constructionBlueprintNotes').innerHTML+'<p><b>PRELIMINARY:</b> Verify site dimensions and structural conditions before drilling.</p></body></html>');w.document.close();w.focus();w.print();}
+
+        function toggleMethodologyArchitecture(force) {
+            state.methodologyArchitectureCollapsed = typeof force === 'boolean' ? force : !state.methodologyArchitectureCollapsed;
+            const content = document.getElementById('methodologyArchitectureContent');
+            const button = document.getElementById('btnToggleMethodologyArchitecture');
+            if (content) content.classList.toggle('hidden', state.methodologyArchitectureCollapsed);
+            if (button) button.textContent = state.methodologyArchitectureCollapsed ? 'Expand' : 'Minimize';
+        }
 
         function updateAll() {
             updateV10SystemUI();
