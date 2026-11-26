@@ -3475,7 +3475,7 @@
 
             // Four recessed lights per row: outer fixtures 30 inches from side walls,
             // with 52 inches between each outer fixture and its neighboring inner fixture.
-            const outerLightX = roomW / 2 - 30.0;
+            const outerLightX = state.roomW / 2 - 30.0;
             const innerLightX = outerLightX - 52.0;
             const lightXCols = [-outerLightX, -innerLightX, innerLightX, outerLightX];
             const frontLightZ = 48.0;
