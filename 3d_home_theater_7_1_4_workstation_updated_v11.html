@@ -455,7 +455,9 @@
                     </div>
 
                     <div class="bg-[#0d1118] border border-slate-800 rounded-xl px-3.5 py-2 flex flex-wrap items-center gap-3 text-[11px] text-slate-300 shadow">
-                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>LCR / Subs</span>
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>Front L/R</span>
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>Center</span>
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>Subwoofer</span>
                         <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-purple-400"></span>Surrounds</span>
                         <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>Atmos (.4)</span>
                         <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-orange-400"></span>1st Reflections & Opposite Walls</span>
@@ -3850,25 +3852,44 @@
                 return p&&q?fmtFtIn(Math.hypot(p.x-q.x,p.y-q.y,p.z-q.z)):'NO VALID BRACKET DATUM';
             };
             const fmtOffset = n => fmtFtIn(Math.abs(n))+' '+(n>=0?'from':'inside/overlapping') ;
+            const speakerColors={FL:'#3b82f6',FR:'#3b82f6',C:'#22d3ee',SUB1:'#f59e0b',SUB2:'#f59e0b',SL:'#a78bfa',SR:'#a78bfa',SBL:'#c084fc',SBR:'#c084fc',TFL:'#34d399',TFR:'#34d399',TRL:'#10b981',TRR:'#10b981'};
+            const groupColor=(ids)=>speakerColors[ids[0]]||'#cbd5e1';
             const liveAngleLine = ids => ids.map(id => {
                 const ch=layout.channels.find(x=>x.id===id);
-                return ch ? id+': Az '+ch.azDeg.toFixed(1)+'° | Elev '+ch.elevDeg.toFixed(1)+'° | '+fmtFtIn(ch.dist3D)+' to MLP' : id+': —';
+                const col=speakerColors[id]||'#cbd5e1';
+                return ch ? '<span style="color:'+col+';font-weight:600">'+id+': Az '+ch.azDeg.toFixed(1)+'° | Elev '+ch.elevDeg.toFixed(1)+'° | '+fmtFtIn(ch.dist3D)+' to MLP</span>' : id+': —';
             }).join('<br>');
             const meanBracketZ = ids => ids.reduce((s,id)=>s+(recById[id]?.bracket?.z ?? layout.channels.find(x=>x.id===id).z),0)/ids.length;
+            const meanSpeakerZ = ids => ids.reduce((s,id)=>s+layout.channels.find(x=>x.id===id).z,0)/ids.length;
+            const meanSpeakerX = ids => ids.reduce((s,id)=>s+layout.channels.find(x=>x.id===id).x,0)/ids.length;
+            const bottomBracketAFF = id => {
+                const r=recById[id], ch=layout.channels.find(x=>x.id===id);
+                if(!r?.bracket) return null;
+                // The bracket's exact lower edge is not specified for several mounts.
+                // Use a clearly disclosed 1.5-in modeled plate-envelope allowance below its datum.
+                return Math.max(0,r.bracket.y-(id==='C'?0:1.5));
+            };
+            const heightText = ids => {
+                if(ids.length===1&&ids[0]==='C') return 'Center support surface: '+fmtFtIn(recById.C?.bracket?.y??19.5)+' AFF (console-supported; no mounting bracket).';
+                if(ids.every(id=>id.startsWith('SUB'))) return 'Floor-supported; bottom of subwoofer at 0" AFF (no mounting bracket).';
+                const vals=ids.map(bottomBracketAFF).filter(v=>v!==null);
+                return vals.length? 'Mounted '+vals.map((v,i)=>fmtFtIn(v)+(ids.length>1?' ('+ids[i]+')':'')).join(' / ')+' from floor to modeled bottom of bracket.':'Bracket height unavailable — verify mount datum.';
+            };
             const pairWidth = (a,b) => fmtBracketDistance(a,b);
             const frontZ = meanBracketZ(['FL','FR']), sideZ=meanBracketZ(['SL','SR']), rearZ=meanBracketZ(['SBL','SBR']);
             const frontAtmosZ=meanBracketZ(['TFL','TFR']), rearAtmosZ=meanBracketZ(['TRL','TRR']);
             const frontBulkheadOffset=arch.bhStart-frontAtmosZ, rearBulkheadOffset=rearAtmosZ-arch.bhEnd;
             const livePlacementRows = [
-                {group:'Front Left / Right Speakers',instruction:'Speaker mounting brackets should be located '+fmtFtIn(frontZ)+' from the front wall, with '+pairWidth('FL','FR')+' between bracket centers.',mlp:liveAngleLine(['FL','FR']),target:'±28.5° horizontal azimuth target; toe-in toward the MLP.'},
-                {group:'Center Speaker',instruction:'The center speaker support datum should be centered on the room centerline on the media-console top at '+fmtFtIn(recById.C?.bracket?.y ?? 19.5)+' AFF; this is a support surface, not a wall bracket.',mlp:liveAngleLine(['C']),target:'0° horizontal azimuth; aimed at seated ear position.'},
-                {group:'Side Surround Speakers',instruction:'Speaker mounting brackets should be located '+fmtFtIn(sideZ)+' from the front wall, with '+pairWidth('SL','SR')+' between bracket centers.',mlp:liveAngleLine(['SL','SR']),target:'93° horizontal azimuth target; maintain the modeled 3-inch wall clearance.'},
-                {group:'Rear Surround Speakers',instruction:'Speaker mounting brackets should be located '+fmtFtIn(state.roomD-rearZ)+' from the rear wall, with '+pairWidth('SBL','SBR')+' between bracket centers.',mlp:liveAngleLine(['SBL','SBR']),target:'145° horizontal azimuth target; aim toward the weighted listening target.'},
-                {group:'Front Atmos Speakers',instruction:'Speaker mounting brackets should be located '+fmtFtIn(Math.abs(frontBulkheadOffset))+' '+(frontBulkheadOffset>=0?'forward of':'behind')+' the front bulkhead edge, with '+pairWidth('TFL','TFR')+' between bracket centers.',mlp:liveAngleLine(['TFL','TFR']),target:'45° horizontal azimuth target; 48° elevation reference.'},
-                {group:'Rear Atmos Speakers',instruction:'Speaker mounting brackets should be located '+fmtFtIn(Math.abs(rearBulkheadOffset))+' '+(rearBulkheadOffset>=0?'behind':'forward of')+' the rear bulkhead edge, with '+pairWidth('TRL','TRR')+' between bracket centers.',mlp:liveAngleLine(['TRL','TRR']),target:'135° horizontal azimuth target; 48° elevation reference.'},
-                {group:'Atmos Front-to-Rear Alignment',instruction:'Left front-to-rear Atmos bracket centers should be '+pairWidth('TFL','TRL')+' apart; right front-to-rear bracket centers should be '+pairWidth('TFR','TRR')+' apart.',mlp:'—',target:'Front/rear overhead pairs should remain symmetrical about the room centerline.'}
+                {ids:['FL','FR'],group:'Front Left / Right Speakers',instruction:'Speaker mounting brackets should be located '+fmtFtIn(frontZ)+' from the front wall, with '+pairWidth('FL','FR')+' between bracket centers. '+heightText(['FL','FR']),mlp:liveAngleLine(['FL','FR']),target:'±28.5° horizontal azimuth target; toe-in toward the MLP.'},
+                {ids:['C'],group:'Center Speaker',instruction:'Speaker should be located '+fmtFtIn(meanSpeakerZ(['C']))+' from the front wall and centered on the room centerline. '+heightText(['C']),mlp:liveAngleLine(['C']),target:'0° horizontal azimuth; aimed at seated ear position.'},
+                {ids:['SL','SR'],group:'Side Surround Speakers',instruction:'Speakers should be located '+fmtFtIn(state.roomW/2+meanSpeakerX(['SL']))+' from the left wall (SL) and '+fmtFtIn(state.roomW/2-meanSpeakerX(['SR']))+' from the right wall (SR), with '+pairWidth('SL','SR')+' between bracket centers. '+heightText(['SL','SR']),mlp:liveAngleLine(['SL','SR']),target:'93° horizontal azimuth target; maintain the modeled 3-inch wall clearance.'},
+                {ids:['SBL','SBR'],group:'Rear Surround Speakers',instruction:'Speakers should be located '+fmtFtIn(state.roomD-meanSpeakerZ(['SBL','SBR']))+' from the rear wall, with '+pairWidth('SBL','SBR')+' between bracket centers. '+heightText(['SBL','SBR']),mlp:liveAngleLine(['SBL','SBR']),target:'145° horizontal azimuth target; aim toward the weighted listening target.'},
+                {ids:['TFL','TFR'],group:'Front Atmos Speakers',instruction:'Speaker mounting brackets should be located '+fmtFtIn(Math.abs(frontBulkheadOffset))+' '+(frontBulkheadOffset>=0?'forward of':'behind')+' the front bulkhead edge, with '+pairWidth('TFL','TFR')+' between bracket centers.',mlp:liveAngleLine(['TFL','TFR']),target:'45° horizontal azimuth target; 48° elevation reference.'},
+                {ids:['TRL','TRR'],group:'Rear Atmos Speakers',instruction:'Speaker mounting brackets should be located '+fmtFtIn(Math.abs(rearBulkheadOffset))+' '+(rearBulkheadOffset>=0?'behind':'forward of')+' the rear bulkhead edge, with '+pairWidth('TRL','TRR')+' between bracket centers.',mlp:liveAngleLine(['TRL','TRR']),target:'135° horizontal azimuth target; 48° elevation reference.'},
+                {ids:['TFL','TFR','TRL','TRR'],group:'Atmos Front-to-Rear Alignment',instruction:'Left front-to-rear Atmos bracket centers should be '+pairWidth('TFL','TRL')+' apart; right front-to-rear bracket centers should be '+pairWidth('TFR','TRR')+' apart.',mlp:'—',target:'Front/rear overhead pairs should remain symmetrical about the room centerline.'},
+                {ids:['SUB1','SUB2'].filter(id=>layout.channels.some(ch=>ch.id===id)),group:'Subwoofer',instruction:'Subwoofer should be located '+fmtFtIn(meanSpeakerZ(layout.channels.filter(ch=>ch.group==='Sub').map(ch=>ch.id)))+' from the front wall. '+heightText(layout.channels.filter(ch=>ch.group==='Sub').map(ch=>ch.id)),mlp:liveAngleLine(layout.channels.filter(ch=>ch.group==='Sub').map(ch=>ch.id).length?layout.channels.filter(ch=>ch.group==='Sub').map(ch=>ch.id):['SUB1']),target:'Low-frequency placement is provisional; verify with REW measurements.'}
             ];
-            const liveTable = '<table class="w-full min-w-[980px] border-collapse"><thead><tr class="text-slate-400 border-b border-slate-700"><th class="p-2 text-left">Speaker group</th><th class="p-2 text-left">Installation instruction</th><th class="p-2 text-left">Actual MLP Aiming & Distance</th><th class="p-2 text-left">Target / reference angles</th></tr></thead><tbody>'+livePlacementRows.map(r=>'<tr class="border-b border-slate-800/80 align-top"><td class="p-2 font-semibold text-white">'+r.group+'</td><td class="p-2 text-slate-300">'+r.instruction+'</td><td class="p-2 font-mono text-amber-300">'+r.mlp+'</td><td class="p-2 text-slate-300">'+r.target+'</td></tr>').join('')+'</tbody></table>';
+            const liveTable = '<table class="w-full min-w-[1120px] border-collapse"><thead><tr class="text-slate-400 border-b border-slate-700"><th class="p-2 text-left">Speaker group</th><th class="p-2 text-left">Installation instruction</th><th class="p-2 text-left">Actual MLP Aiming & Distance</th><th class="p-2 text-left">Target / reference angles</th></tr></thead><tbody>'+livePlacementRows.map(r=>'<tr class="border-b border-slate-800/80 align-top"><td class="p-2 font-semibold" style="color:'+groupColor(r.ids)+';border-left:3px solid '+groupColor(r.ids)+'">'+r.group+'</td><td class="p-2 text-slate-300">'+r.instruction+'</td><td class="p-2 font-mono">'+r.mlp+'</td><td class="p-2 text-slate-300">'+r.target+'</td></tr>').join('')+'</tbody></table><p class="text-[10px] text-slate-500 mt-2">Bracket-bottom heights use a modeled 1.5-inch allowance below the bracket datum where the exact lower edge is not specified by the mount documentation. Confirm the actual bracket lower edge and mounting template on site; console and subwoofer are support/floor placements, not bracket mounts.</p>';
             const liveTableHost=document.getElementById('liveSpeakerMountSchedule');
             if(liveTableHost) liveTableHost.innerHTML=liveTable;
 
