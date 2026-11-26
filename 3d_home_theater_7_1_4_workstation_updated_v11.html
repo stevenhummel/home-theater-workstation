@@ -3473,13 +3473,13 @@
                 });
             }
 
+            // Four recessed lights in one front row, 48 inches from the front wall.
+            // Preserve the existing left-to-right fixture spacing.
             const lightXCols = [-76.0, -24.0, 24.0, 76.0];
-            const rearLightZ = depth - 20.0;
-            const recessedLights = [
-                ...lightXCols.map((x, idx) => ({ id: `DL-F1-${idx + 1}`, x, z: 26.0, y: ceilH, zone: 'Front Row 1' })),
-                ...lightXCols.map((x, idx) => ({ id: `DL-F2-${idx + 1}`, x, z: 75.0, y: ceilH, zone: 'Front Row 2' })),
-                ...lightXCols.map((x, idx) => ({ id: `DL-R1-${idx + 1}`, x, z: rearLightZ, y: ceilH, zone: 'Rear Row Behind Bulkhead' }))
-            ];
+            const frontLightZ = 48.0;
+            const recessedLights = lightXCols.map((x, idx) => ({
+                id: `DL-F-${idx + 1}`, x, z: frontLightZ, y: ceilH, zone: 'Single Front Row — 48 in from Front Wall'
+            }));
 
             const matHaloTrim = new THREE.MeshStandardMaterial({
                 color: 0xf8fafc,
@@ -3495,7 +3495,7 @@
             });
 
             const representativeLightXs = [-50.0, 50.0];
-            const representativeLightZs = [26.0, 75.0, rearLightZ];
+            const representativeLightZs = [frontLightZ];
             if (state.recessedLightsOn) {
                 representativeLightZs.forEach((lz) => {
                     const ly = ceilH - 2.0;
@@ -4261,7 +4261,8 @@ function renderConstructionBlueprint(){
  const layout=computeMethodologyLayout(state.standard),treat=computeAcousticTreatments(layout),arch=treat.arch,chs=layout.channels,panels=treat.panels;
  const scale=Math.min(760/state.roomW,1040/state.roomD),rw=state.roomW*scale,rd=state.roomD*scale,ox=125+(760-rw)/2,oy=120,X=x=>ox+(x+state.roomW/2)*scale,Z=z=>oy+z*scale,f=n=>Number(n).toFixed(1);
  const rearDoorX0=-ARCH.rearDoorW/2,rearDoorX1=ARCH.rearDoorW/2;
- const lights=[-76,-24,24,76].flatMap((x,i)=>[{id:'DL-F1-'+(i+1),x,z:26,zone:'Front row 1'},{id:'DL-F2-'+(i+1),x,z:75,zone:'Front row 2'},{id:'DL-R1-'+(i+1),x,z:state.roomD-20,zone:'Rear row'}]);
+ // Four recessed fixtures, one row 48 inches from the front wall; preserve existing X spacing.
+ const lights=[-76,-24,24,76].map((x,i)=>({id:'DL-F-'+(i+1),x,z:48,zone:'Single front row — 48 in from front wall'}));
  let s='<svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 1000 '+Math.ceil(rd+300)+'"><defs><marker id="bpArrow" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto"><path d="M7 0 L0 3.5 L7 7" fill="none" stroke="#334155" stroke-width="1"/></marker></defs><rect width="100%" height="100%" fill="white"/><text x="500" y="28" text-anchor="middle" font-size="21" font-weight="bold" fill="#111827">HOME THEATER — FULL ROOM CONSTRUCTION PLAN</text><text x="500" y="51" text-anchor="middle" font-size="12" fill="#475569">'+f(state.roomW)+' in × '+f(state.roomD)+' in • ceiling '+f(state.ceilH)+' in • current placement methodology: '+state.standard+'</text>';
  const dim=(x1,y1,x2,y2,label,tx,ty)=>'<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="#334155" stroke-width="1.2" marker-start="url(#bpArrow)" marker-end="url(#bpArrow)"/><text x="'+tx+'" y="'+ty+'" text-anchor="middle" font-size="11" font-weight="bold" fill="#111827">'+label+'</text>';
  s+='<rect x="'+ox+'" y="'+oy+'" width="'+rw+'" height="'+rd+'" fill="#f8fafc" stroke="#111827" stroke-width="5"/><text x="'+(ox+rw/2)+'" y="'+(oy-13)+'" text-anchor="middle" font-size="13" font-weight="bold" fill="#111827">FRONT WALL / SCREEN — Z=0</text><text x="'+(ox+rw/2)+'" y="'+(oy+rd+22)+'" text-anchor="middle" font-size="13" font-weight="bold" fill="#111827">REAR WALL — Z='+f(state.roomD)+'</text>';
@@ -4272,7 +4273,7 @@ function renderConstructionBlueprint(){
  s+='<rect x="'+(ox-4)+'" y="'+Z(arch.leftDoorStartZ)+'" width="9" height="'+(ARCH.leftDoorW*scale)+'" fill="#bfdbfe" stroke="#1d4ed8" stroke-width="2"/><text x="'+(ox+15)+'" y="'+Z(arch.leftDoorCenterZ)+'" font-size="10" fill="#1e40af">D-1 LEFT DOOR '+ARCH.leftDoorW+'" W × '+ARCH.leftDoorH+'" H</text>';
  s+='<rect x="'+X(rearDoorX0)+'" y="'+(oy+rd-5)+'" width="'+(ARCH.rearDoorW*scale)+'" height="10" fill="#bfdbfe" stroke="#1d4ed8" stroke-width="2"/><text x="'+X(0)+'" y="'+(oy+rd-13)+'" text-anchor="middle" font-size="10" fill="#1e40af">D-2 FRENCH DOORS '+ARCH.rearDoorW+'" W × '+ARCH.rearDoorH+'" H</text>';
  [{id:'SW-1',z:(arch.sw1StartZ+arch.sw1EndZ)/2},{id:'SW-2',z:(arch.sw2StartZ+arch.sw2EndZ)/2}].forEach(q=>{s+='<rect x="'+(ox-7)+'" y="'+(Z(q.z)-5)+'" width="8" height="10" fill="#facc15" stroke="#854d0e"/><text x="'+(ox+13)+'" y="'+(Z(q.z)+3)+'" font-size="10" fill="#854d0e">'+q.id+'</text>';});
- // Ceiling recessed lights: four columns, three rows. Each center is dimensioned in schedule.
+ // Ceiling recessed lights: one row of four. Each center is dimensioned in schedule.
  lights.forEach(q=>{s+='<circle cx="'+X(q.x)+'" cy="'+Z(q.z)+'" r="5.5" fill="#fef08a" stroke="#a16207" stroke-width="1.5"/><text x="'+(X(q.x)+7)+'" y="'+(Z(q.z)-7)+'" font-size="8" fill="#854d0e">'+q.id+'</text>';});
  // Wall acoustic treatment footprints, with IDs and exact center coordinates from solver.
  panels.forEach(p=>{if(!p.render)return;const x=X(p.x),y=Z(p.z),h=Math.max(4,p.w*scale),w=Math.max(4,p.d*scale);s+='<rect x="'+(x-w/2)+'" y="'+(y-h/2)+'" width="'+w+'" height="'+h+'" fill="#a78bfa" fill-opacity=".65" stroke="#6d28d9" stroke-width="1.5"/><text x="'+(x+7)+'" y="'+(y+3)+'" font-size="9" font-weight="bold" fill="#5b21b6">'+p.id+'</text>';});
