@@ -4726,7 +4726,7 @@ function printConstructionBlueprint(){if(!constructionBlueprintSVG)renderConstru
             setGhostStandard('none');
             document.getElementById('ghostSelect').value = 'none';
             setAtmosOrientation('horizontal');
-            setAtmosMountOption(1);
+            setAtmosMountOption(2);
             setBedMountMode('wall');
         }
 
@@ -4734,9 +4734,9 @@ function printConstructionBlueprint(){if(!constructionBlueprintSVG)renderConstru
             let csv = '';
             let filename = '';
             if (type === 'master') {
-                csv = 'ID,Component,Model,Coordinates,Datum,Dimensions,Mounting_Height_Hardware,MLP_Aiming_Distance,Standard,Collision_Status\n';
+                csv = 'ID,Component,Model,Coordinates,Datum,Dimensions,Mounting_Height_Hardware,Standard,Collision_Status\n';
                 lastMasterRows.forEach(r => {
-                    csv += `"${r.id}","${r.name}","${r.model}","${r.coords}","${r.datum}","${r.dims}","${r.mountInfo}","${r.aiming}","${r.standard}","${r.clearance}"\n`;
+                    csv += `"${r.id}","${r.name}","${r.model}","${r.coords}","${r.datum}","${r.dims}","${r.mountInfo}","${r.standard}","${r.clearance}"\n`;
                 });
                 filename = `HomeTheater_7.2.4_Master_Schedule_${state.standard}.csv`;
             } else {
@@ -4757,9 +4757,9 @@ function printConstructionBlueprint(){if(!constructionBlueprintSVG)renderConstru
         }
 
         function copyScheduleTSV() {
-            const lines = ['ID\tComponent\tCoordinates\tMounting Height\tMLP Aiming\tClearance'];
+            const lines = ['ID\tComponent\tCoordinates\tMounting Height\tClearance'];
             lastMasterRows.forEach(r => {
-                lines.push(`${r.id}\t${r.name}\t${r.coords}\t${r.mountInfo}\t${r.aiming}\t${r.clearance}`);
+                lines.push(`${r.id}\t${r.name}\t${r.coords}\t${r.mountInfo}\t${r.clearance}`);
             });
             const ta = document.createElement('textarea');
             ta.value = lines.join('\n');
