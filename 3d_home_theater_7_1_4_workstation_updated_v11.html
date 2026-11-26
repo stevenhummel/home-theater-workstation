@@ -169,7 +169,7 @@
                         <option value="dolby">2. Official Dolby 7.1.4 Home Guide</option>
                         <option value="studio">3. Dolby Studio / Grimani Spec</option>
                         <option value="gurus">4. Home Theater Gurus (HTG Sound Bubble)</option>
-                        <option value="advice">5. Audio Advice Design Tool (Saved 7.2.4 Coordinates)</option>
+                        <option value="advice">5. Audio Advice Design Tool (MLP-Responsive Saved Layout)</option>
                         <option value="tah">6. Theater At Home (TAH 0.7x Grid)</option>
                         <option value="cedia">7. CEDIA / CTA-RP22 Spec</option>
                         <option value="trinnov">8. Trinnov / Auro-3D Hybrid (36° Height)</option>
@@ -893,7 +893,7 @@
                 id: 'advice',
                 shortTitle: '5. Audio Advice Tool',
                 fullTitle: '5. Audio Advice Design Tool (Saved Room Spec)',
-                desc: 'Saved Audio Advice 7.2.4 coordinates adapted to this workstation’s 7.1.4 system: preserve the reported seven bed-channel positions and four overhead positions, but model the current single-subwoofer topology. Side and rear surround pairs remain distinct; reported coordinates are a reference layout, not proof that its side-surround guidance is universally optimal for 7.1.4.'
+                desc: 'Audio Advice saved 7.2.4 reference geometry adapted to this 7.1.4 system. The 128-inch MLP reproduces the reported baseline; moving the MLP slider visibly recalculates speaker positions and aiming while respecting room and mounting constraints. This responsive formula is the workstation adaptation, not a published Audio Advice algorithm.'
             },
             tah: {
                 id: 'tah',
@@ -1274,20 +1274,27 @@
                     break;
                 case 'advice': {
                     // Audio Advice saved-room baseline transcribed from the user's Nov. 20, 2026 report:
-                    // room 228"W × 208"D × 88"H; L/R mains 132" center-to-center; main surrounds
+                    // room 228"W × 208"D × 88"H; L/R mains 132" center-to-center; side surrounds
                     // 121" from screen wall at 50" tweeter height; rear surrounds 86.6" apart
                     // on the rear wall at 50" tweeter height; Atmos X=±26.755", TFL Z=91.11",
-                    // TRL Z=158.89". These are wall-datum coordinates, NOT MLP-relative.
-                    // Front-wall offsets stay fixed; rear-wall offsets stay fixed when dimensions change.
-                    // MLP movement changes calculated aiming/angles only, not saved-plan coordinates.
-                    mainHalfSpan = 66.0; // 11'0" L/R center-to-center separation
-                    sideZ = 121.0;       // 10'1" from screen/front wall
-                    rearHalfSpan = 43.3; // 7'2.6" rear surround center-to-center separation
-                    atmosHalfX = 26.755; // 4'5.51" Atmos center-to-center separation / 2
-                    tfZ = 91.11;         // 7'7.11" from screen/front wall
-                    trZ = state.roomD - 49.11; // 13'2.89" from front wall at 208" depth; fixed 49.11" rear-wall offset
-                    targetElevDeg = 0; // Report provides coordinates, not a target elevation angle.
-                    standardNote = 'Audio Advice saved 7.2.4 plan adapted to this 7.1.4 room. The reported wall-datum coordinates are intentionally fixed to the front/rear walls and room centerline (mains ±66.0 in, side surrounds 121.0 in from front wall, rear pair ±43.3 in, Atmos ±26.755 in); moving the MLP recalculates angles and aiming, not the saved installation coordinates. Selecting this preset repositions the modeled speakers to these coordinates.';
+                    // TRL Z=158.89". Preserve that exact reference layout at MLP Z=128".
+                    // Away from the reference MLP, recompute the array geometry from saved
+                    // angular/relative offsets so moving the MLP visibly repositions speakers
+                    // as well as recalculating their aim. Physical room and mount constraints
+                    // still limit the final coordinates.
+                    const adviceReferenceMlpZ = 128.0;
+                    const adviceMlpDelta = mlpZ - adviceReferenceMlpZ;
+                    const adviceRearDepth = Math.max(1, state.roomD - mlpZ);
+                    const adviceReferenceRearDepth = 208.0 - adviceReferenceMlpZ;
+                    const adviceMlpScale = mlpZ / adviceReferenceMlpZ;
+                    mainHalfSpan = 66.0 * adviceMlpScale;
+                    sideZ = 121.0 + adviceMlpDelta;
+                    rearHalfSpan = 43.3 * (adviceRearDepth / adviceReferenceRearDepth);
+                    atmosHalfX = 26.755 * adviceMlpScale;
+                    tfZ = 91.11 + adviceMlpDelta;
+                    trZ = state.roomD - 49.11 + adviceMlpDelta;
+                    targetElevDeg = 0; // Audio Advice source supplies coordinates, not an elevation target.
+                    standardNote = 'Audio Advice saved 7.2.4 reference plan adapted to this 7.1.4 room. At the 128-inch reference MLP, the reported coordinates are reproduced. When the MLP slider moves, the preset recalculates main/Atmos width, side-surround depth, and rear-pair spread from the saved reference geometry, then applies room, bulkhead and mounting-clearance constraints. This responsive formula is this workstation adaptation, not a published Audio Advice algorithm.';
                     break;
                 }
                 case 'tah':
