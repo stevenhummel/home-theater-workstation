@@ -4843,10 +4843,14 @@ function printConstructionBlueprint(){if(!constructionBlueprintSVG)renderConstru
             // plan-view height witness from the actual object point down to the floor
             // datum instead of using a short, floating decorative tick.
             const verticalCallout = (point,label,offset=42,heightInches=point.y) => {
-                const p=project(point), floor=project({x:point.x,y:0,z:point.z}); if(!p.visible||!floor.visible) return '';
+                // A top-down camera collapses world Y, so use a scaled elevation ruler.
+                // Fit its full object-to-floor height into the remaining viewport; never clip it.
+                const p=project(point); if(!p.visible) return '';
                 const x=Math.max(18,Math.min(width-190,p.x+offset));
-                const y1=Math.max(96,Math.min(height-24,p.y));
-                const y2=Math.max(y1+18,Math.min(height-12,floor.y));
+                const y1=Math.max(96,Math.min(height-140,p.y));
+                const available=Math.max(24,height-y1-28);
+                const pxPerInch=Math.min(3.2,available/Math.max(1,heightInches));
+                const y2=y1+Math.max(0,heightInches)*pxPerInch;
                 const midY=(y1+y2)/2;
                 return '<line class="dim-ext" x1="'+p.x.toFixed(1)+'" y1="'+p.y.toFixed(1)+'" x2="'+x.toFixed(1)+'" y2="'+y1.toFixed(1)+'"/><line class="dim-line" x1="'+x.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x.toFixed(1)+'" y2="'+y2.toFixed(1)+'"/><line class="dim-line" x1="'+(x-5).toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+(x+5).toFixed(1)+'" y2="'+y1.toFixed(1)+'"/><line class="dim-line" x1="'+(x-5).toFixed(1)+'" y1="'+y2.toFixed(1)+'" x2="'+(x+5).toFixed(1)+'" y2="'+y2.toFixed(1)+'"/><text class="dim-label" text-anchor="start" x="'+(x+9).toFixed(1)+'" y="'+Math.max(110,Math.min(height-8,midY+4)).toFixed(1)+'">'+label+'</text>';
             };
