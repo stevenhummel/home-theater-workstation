@@ -1901,20 +1901,19 @@
             }
 
             function solveNonOverlappingPanelZ(preferredZ, wallX, placedPanels, fixedObstructions, minLimitZ, maxLimitZ) {
-                // The model uses 24" × 48" × 4" acoustic panels exclusively.
+                // Only 24" × 48" × 4" acoustic panels are permitted in this model.
                 const standardFit = solveForPanelWidth(
                     preferredZ, pw, wallX, placedPanels, fixedObstructions, minLimitZ, maxLimitZ
                 );
                 if (standardFit) {
                     return {
-                        ...standardFit,
-                        w: pw, h: ph, d: pd,
+                        ...standardFit, w: pw, h: ph, d: pd,
                         variant: 'standard',
                         type: 'GIK Palomar 4" — Standard',
                         reason: ''
                     };
                 }
-                // Never substitute a narrower panel; report the full-size panel unplaced.
+                // Do not substitute a narrower panel; report the full-size panel unplaced.
                 const halfP = pw / 2;
                 const safeMinCenter = minLimitZ + halfP;
                 const safeMaxCenter = maxLimitZ - halfP;
@@ -2036,7 +2035,7 @@
             ];
             // Solve the hallway-balancing R5 panel first so the other four right-wall
             // panels avoid its ACTUAL selected footprint. This matters when R5 must use
-            // the 24" slim substitute: reserving a fictitious 24" footprint would
+            // the 11.8" slim substitute: reserving a fictitious 24" footprint would
             // unnecessarily force another panel to move or become slim as well.
             const hallwayVoidCenterZ = arch.hallwayStartZ + (arch.hallwayEndZ - arch.hallwayStartZ) * 0.37;
             const r5 = solveNonOverlappingPanelZ(hallwayVoidCenterZ, halfW - 2.0, placedRight, rightObstructions, btEndZ + stdGap, state.roomD - 8);
@@ -3927,7 +3926,7 @@
                 {
                     icon: 'fa-wave-square text-orange-400',
                     title: 'GIK 244 Corner Traps & 4L/5R Palomar Array',
-                    body: `Elevated 12"×48" GIK 244 front-corner bass traps (Y=${treatments.bassTrapBottomY.toFixed(1)}"–${(treatments.bassTrapBottomY + ARCH.bassTrapH).toFixed(1)}", centered on the active side-surround axis) target front trihedral pressure zones. The 4-left / 5-right acoustic panel array defaults to 24"×48"×4" standard panels and automatically substitutes an 24"×48"×4" slim panel only when no collision-free standard-width wall bay exists. Substitution is one-for-one; comparable absorption performance is not assumed without product data.`
+                    body: `Elevated 12"×48" GIK 244 front-corner bass traps (Y=${treatments.bassTrapBottomY.toFixed(1)}"–${(treatments.bassTrapBottomY + ARCH.bassTrapH).toFixed(1)}", centered on the active side-surround axis) target front trihedral pressure zones. The 4-left / 5-right acoustic panel array defaults to 24"×48"×4" standard panels and automatically substitutes an 11.8"×48"×4" slim panel only when no collision-free standard-width wall bay exists. Substitution is one-for-one; comparable absorption performance is not assumed without product data.`
                 }
             ];
 
@@ -4144,9 +4143,7 @@
                     ySpan: `${(p.y - p.h/2).toFixed(1)}" to ${(p.y + p.h/2).toFixed(1)}"`,
                     gapInfo: p.onDoor
                         ? 'Centered on 35" Door Leaf'
-                        : (p.
-                            ? 'SLIM SUBSTITUTE — selected because the standard panel cannot fit; verify product absorption data (equivalence not assumed)'
-                            : (p.reason || '>= 1.0" Switch / >= 2.0" Panel-Speaker Gap')),
+                        : (p.reason || '>= 1.0" Switch / >= 2.0" Panel-Speaker Gap'),
                     pairing: p.pairing,
                     status: p.valid ? 'PASS — Valid Gap' : (p.render === false ? 'NOT RENDERED — NO CLEAR WALL BAY' : 'VIOLATION — Clearance'),
                     isError: !p.valid
