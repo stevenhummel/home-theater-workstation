@@ -2034,9 +2034,7 @@
                 { start: sr.z - sr.dims.d / 2, end: sr.z + sr.dims.d / 2, gap: stdGap }
             ];
             // Solve the hallway-balancing R5 panel first so the other four right-wall
-            // panels avoid its ACTUAL selected footprint. This matters when R5 must use
-            // the 11.8" slim substitute: reserving a fictitious 24" footprint would
-            // unnecessarily force another panel to move or become slim as well.
+            // panels avoid its actual full-size 24-inch footprint.
             const hallwayVoidCenterZ = arch.hallwayStartZ + (arch.hallwayEndZ - arch.hallwayStartZ) * 0.37;
             const r5 = solveNonOverlappingPanelZ(hallwayVoidCenterZ, halfW - 2.0, placedRight, rightObstructions, btEndZ + stdGap, state.roomD - 8);
             const r5Panel = makeSolvedPanel('PNL-R5', 'Right Wall', halfW - 2.0, r5, 'Intentional 5th Panel (Opposite Hallway Void)', 'Absorbs rear-right lateral reflections opposite 41" left hallway');
@@ -2060,7 +2058,19 @@
             // Preserve the original display / schedule ordering even though R5 is solved first.
             placedRight.push(r1Panel, r2Panel, r3Panel, r4Panel, r5Panel);
 
-            const panels = [...placedLeft, ...placedRight];
+            // Final size invariant for every acoustic wall panel. Bass traps (BT-*)
+            // retain their own separate 12" × 48" geometry.
+            const panels = [...placedLeft, ...placedRight].map(p => {
+                if (!p.id.startsWith('PNL-')) return p;
+                return {
+                    ...p,
+                    w: ARCH.panelW,
+                    h: ARCH.panelH,
+                    d: ARCH.panelD,
+                    variant: 'standard',
+                    type: 'GIK Palomar 4" — Standard'
+                };
+            });
             return { panels, arch, sl, sr, reflZ, panelCenterY, bassTrapBottomY };
         }
 
@@ -3926,7 +3936,7 @@
                 {
                     icon: 'fa-wave-square text-orange-400',
                     title: 'GIK 244 Corner Traps & 4L/5R Palomar Array',
-                    body: `Elevated 12"×48" GIK 244 front-corner bass traps (Y=${treatments.bassTrapBottomY.toFixed(1)}"–${(treatments.bassTrapBottomY + ARCH.bassTrapH).toFixed(1)}", centered on the active side-surround axis) target front trihedral pressure zones. The 4-left / 5-right acoustic panel array defaults to 24"×48"×4" standard panels and automatically substitutes an 11.8"×48"×4" slim panel only when no collision-free standard-width wall bay exists. Substitution is one-for-one; comparable absorption performance is not assumed without product data.`
+                    body: `Elevated 12"×48" GIK 244 front-corner bass traps (Y=${treatments.bassTrapBottomY.toFixed(1)}"–${(treatments.bassTrapBottomY + ARCH.bassTrapH).toFixed(1)}", centered on the active side-surround axis) target front trihedral pressure zones. The 4-left / 5-right acoustic panel array uses 24"×48"×4" panels exclusively. Every PNL unit is enforced at the full 24" width and 48" height; if it cannot fit, it is marked unplaced rather than replaced by a narrower panel.`
                 }
             ];
 
