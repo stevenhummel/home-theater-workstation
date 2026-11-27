@@ -2989,36 +2989,33 @@
                     const rayMat1 = new THREE.LineBasicMaterial({color:0xf97316,transparent:true,opacity:0.92});
                     const rayMat2 = new THREE.LineBasicMaterial({color:0xa855f7,transparent:true,opacity:0.82});
                     const makePath = (speaker, wallSequence) => {
-                        // Image-source construction: mirror the source across the
-                        // reflection planes in reverse order, then intersect the
-                        // straight image-source→MLP segment with those planes.
-                        let image = {x:speaker.x,y:speaker.y,z:speaker.z};
-                        for (const wall of [...wallSequence].reverse()) {
-                            const plane = wall==='L' ? -half : half;
-                            image.x = 2*plane-image.x;
+                        // Unfold the room one wall at a time. Reflect the MLP across
+                        // each successive unfolded wall plane; the straight source-to-
+                        // virtual-MLP ray intersects those planes in physical bounce order.
+                        let sign=1,offset=0;
+                        const unfoldedPlanes=[];
+                        let virtualMlp={...mlp};
+                        for(const wall of wallSequence){
+                            const physicalPlane=wall==='L'?-half:half;
+                            const plane=sign*physicalPlane+offset;
+                            unfoldedPlanes.push({wall,plane,sign,offset});
+                            virtualMlp.x=2*plane-virtualMlp.x;
+                            sign=-sign;
+                            offset=2*plane-offset;
                         }
                         const hits=[];
-                        let from={...image},to={...mlp};
-                        for (const wall of wallSequence) {
-                            const plane=wall==='L'?-half:half;
-                            const t=(plane-from.x)/(to.x-from.x);
+                        for(const item of unfoldedPlanes){
+                            const t=(item.plane-speaker.x)/(virtualMlp.x-speaker.x);
                             if(!Number.isFinite(t)||t<0||t>1)return null;
-                            hits.push({x:plane,y:from.y+(to.y-from.y)*t,z:from.z+(to.z-from.z)*t});
-                            from={...hits[hits.length-1]};
+                            const unfoldedX=speaker.x+(virtualMlp.x-speaker.x)*t;
+                            const physicalX=(unfoldedX-item.offset)/item.sign;
+                            hits.push({
+                                x:physicalX,
+                                y:speaker.y+(virtualMlp.y-speaker.y)*t,
+                                z:speaker.z+(virtualMlp.z-speaker.z)*t
+                            });
                         }
-                        // The calculated hits are on the unfolded ray. Convert
-                        // them back to physical room coordinates by reflecting
-                        // the remaining unfolded segments across prior walls.
-                        const physical=[];
-                        for(let i=0;i<hits.length;i++){
-                            let q={...hits[i]};
-                            for(let k=0;k<i;k++){
-                                const plane=wallSequence[k]==='L'?-half:half;
-                                q.x=2*plane-q.x;
-                            }
-                            physical.push(q);
-                        }
-                        return [{x:speaker.x,y:speaker.y,z:speaker.z},...physical,mlp];
+                        return [{x:speaker.x,y:speaker.y,z:speaker.z},...hits,mlp];
                     };
                     const panelAt = (hit,wall) => treatments.panels.find(p=>{
                         if(p.render===false)return false;
