@@ -4323,7 +4323,7 @@ function buildLiveInstallationRecords(layout, arch) {
 }
 
 function renderConstructionBlueprint(){
- const layout=computeMethodologyLayout(state.standard),treat=computeAcousticTreatments(layout),arch=treat.arch,chs=layout.channels,panels=treat.panels;
+ const layout=computeMethodologyLayout(state.standard),treat=computeAcousticTreatments(layout);applyManualPlacementOverrides(layout,treat);const arch=treat.arch,chs=layout.channels,panels=treat.panels;
  const scale=Math.min(760/state.roomW,1040/state.roomD),rw=state.roomW*scale,rd=state.roomD*scale,ox=125+(760-rw)/2,oy=120,X=x=>ox+(x+state.roomW/2)*scale,Z=z=>oy+z*scale,f=n=>Number(n).toFixed(1);
  const rearDoorX0=-ARCH.rearDoorW/2,rearDoorX1=ARCH.rearDoorW/2;
  // Eight recessed fixtures: one four-light front row at 48 inches, plus the unchanged four-light rear row.
@@ -4961,6 +4961,7 @@ function printConstructionBlueprint(){if(!constructionBlueprintSVG)renderConstru
         }
 
         function resetAllDefaults() {
+            state.manualOverrides = {};
             state.roomW = 228;
             state.roomD = 208;
             state.ceilH = 91;
