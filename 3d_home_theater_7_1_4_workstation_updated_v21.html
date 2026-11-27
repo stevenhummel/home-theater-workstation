@@ -1816,7 +1816,7 @@
                 let sign = 1, offset = 0, virtualX = reflectionMLP.x;
                 const planes = [];
                 wallSequence.forEach(wall => {
-                    const physicalPlane = wall === 'L' ? -halfW + pd / 2 + 2.0 : halfW - pd / 2 - 2.0;
+                    const physicalPlane = wall === 'L' ? -halfW : halfW;
                     const plane = sign * physicalPlane + offset;
                     planes.push({ wall, plane, sign, offset });
                     virtualX = 2 * plane - virtualX;
@@ -1838,11 +1838,12 @@
             // Door panel face is 1/2" farther into the room than the standard wall-panel face.
             const doorFrontX = -halfW + 2.5 + pd / 2;
             const doorReflectionTargets = reflectionSources.map(speaker => {
-                const virtualX = 2 * doorFrontX - reflectionMLP.x;
-                const t = (doorFrontX - speaker.x) / (virtualX - speaker.x);
-                if (!Number.isFinite(t) || t < 0 || t > 1) return null;
-                return { y: speaker.y + (reflectionMLP.y - speaker.y) * t,
-                    z: speaker.z + (reflectionMLP.z - speaker.z) * t, order: 1, weight: 10 };
+                // Project the incident segment of the real wall-reflection path onto
+                // the door absorber's own front face.
+                const tFace = (doorFrontX - speaker.x) / (-halfW - speaker.x);
+                if (!Number.isFinite(tFace) || tFace < 0 || tFace > 1) return null;
+                return { y: speaker.y + (reflectionMLP.y - speaker.y) * tFace,
+                    z: speaker.z + (reflectionMLP.z - speaker.z) * tFace, order: 1, weight: 10 };
             }).filter(Boolean);
             [
                 { id: 'FL-L-1', speaker: fl, seq: ['L'], order: 1 },
@@ -1855,13 +1856,25 @@
                 { id: 'FR-LR-2', speaker: fr, seq: ['L', 'R'], order: 2 }
             ].forEach(path => {
                 if (!path.speaker) return;
-                makeReflectionHits(path.speaker, path.seq).forEach((hit, index) => {
-                    if (hit) reflectionTargets.push({
-                        ...hit,
+                const hits = makeReflectionHits(path.speaker, path.seq);
+                let previous = path.speaker;
+                hits.forEach((hit, index) => {
+                    if (!hit) return;
+                    // Score at the panel's inward face, not at the wall behind it.
+                    const faceX = hit.wall === 'L' ? -halfW + pd / 2 + 2.0 : halfW - pd / 2 - 2.0;
+                    const tFace = (faceX - previous.x) / (hit.x - previous.x);
+                    const faceHit = {
+                        ...hit, x: faceX,
+                        y: previous.y + (hit.y - previous.y) * tFace,
+                        z: previous.z + (hit.z - previous.z) * tFace
+                    };
+                    reflectionTargets.push({
+                        ...faceHit,
                         key: path.id + '-' + index,
                         order: path.order,
                         weight: path.order === 1 ? 3 : 1.5
                     });
+                    previous = hit;
                 });
             });
 
