@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Home Theater 7.1.4 / 7.2.4 Acoustic Engineering Workstation — V19</title>
+    <title>3D Home Theater 7.1.4 / 7.2.4 Acoustic Engineering Workstation — V20</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2980,8 +2980,14 @@
 
                 treatments.panels.forEach(p => {
                     if (p.render === false) return;
+                    const isWallPanel = String(p.id).startsWith('PNL-');
+                    // Renderer-level invariant: acoustic wall panels are always 24 x 48 x 4 in.
+                    // BT-* bass traps retain their independent 12-inch width.
+                    const renderW = isWallPanel ? 24 : p.w;
+                    const renderH = isWallPanel ? 48 : p.h;
+                    const renderD = isWallPanel ? 4 : p.d;
                     const isError = !p.valid && showRed;
-                    const geo = new THREE.BoxGeometry(p.d, p.h, p.w);
+                    const geo = new THREE.BoxGeometry(renderD, renderH, renderW);
                     const selectedFaceMaterial = matPanelFace;
                     const mesh = new THREE.Mesh(
                         geo,
@@ -4397,7 +4403,7 @@ function renderConstructionBlueprint(){
  // Ceiling recessed lights: one row of four. Each center is dimensioned in schedule.
  lights.forEach(q=>{s+='<circle cx="'+X(q.x)+'" cy="'+Z(q.z)+'" r="5.5" fill="#fef08a" stroke="#a16207" stroke-width="1.5"/><text x="'+(X(q.x)+7)+'" y="'+(Z(q.z)-7)+'" font-size="8" fill="#854d0e">'+q.id+'</text>';});
  // Wall acoustic treatment footprints, with IDs and exact center coordinates from solver.
- panels.forEach(p=>{if(!p.render)return;const x=X(p.x),y=Z(p.z),h=Math.max(4,p.w*scale),w=Math.max(4,p.d*scale);s+='<rect data-pick-id="'+p.id+'" data-pick-type="acoustic panel" style="cursor:pointer" x="'+(x-w/2)+'" y="'+(y-h/2)+'" width="'+w+'" height="'+h+'" fill="#a78bfa" fill-opacity=".65" stroke="#6d28d9" stroke-width="1.5"/><text x="'+(x+7)+'" y="'+(y+3)+'" font-size="9" font-weight="bold" fill="#5b21b6">'+p.id+'</text>';});
+ panels.filter(p=>String(p.id).startsWith('PNL-')).forEach(p=>{if(!p.render)return;const panelW=24,panelD=4;const x=X(p.x),y=Z(p.z),h=Math.max(4,panelW*scale),w=Math.max(4,panelD*scale);s+='<rect data-pick-id="'+p.id+'" data-pick-type="acoustic panel" style="cursor:pointer" x="'+(x-w/2)+'" y="'+(y-h/2)+'" width="'+w+'" height="'+h+'" fill="#a78bfa" fill-opacity=".65" stroke="#6d28d9" stroke-width="1.5"/><text x="'+(x+7)+'" y="'+(y+3)+'" font-size="9" font-weight="bold" fill="#5b21b6">'+p.id+' · 24×48×4</text>';});
  // Front-corner bass traps (plan footprints).
  [{id:'BT-L',x:-state.roomW/2+ARCH.bassTrapD/2,z:ARCH.bassTrapFrontOffset+ARCH.bassTrapW/2},{id:'BT-R',x:state.roomW/2-ARCH.bassTrapD/2,z:ARCH.bassTrapFrontOffset+ARCH.bassTrapW/2}].forEach(q=>{s+='<rect x="'+(X(q.x)-ARCH.bassTrapD*scale/2)+'" y="'+(Z(q.z)-ARCH.bassTrapW*scale/2)+'" width="'+(ARCH.bassTrapD*scale)+'" height="'+(ARCH.bassTrapW*scale)+'" fill="#fb923c" fill-opacity=".65" stroke="#c2410c"/><text x="'+(X(q.x)+6)+'" y="'+Z(q.z)+'" font-size="9" fill="#9a3412">'+q.id+'</text>';});
 
