@@ -843,6 +843,7 @@
             atmosOrient: 'horizontal',
             atmosMountOpt: 2,
             methodologyArchitectureCollapsed: false,
+            manualOverrides: {},
             bedMountMode: 'wall',
             subCount: 1,
             showViolations: true,
@@ -1773,6 +1774,7 @@
             return bestLayout;
         }
 
+        function applyManualPlacementOverrides(layout,treatments){ const o=state.manualOverrides||{}; layout.channels.forEach(c=>{if(o[c.id])['x','y','z'].forEach(k=>{if(Number.isFinite(o[c.id][k]))c[k]=o[c.id][k];});}); if(treatments&&treatments.panels)treatments.panels.forEach(p=>{if(o[p.id])['x','y','z'].forEach(k=>{if(Number.isFinite(o[p.id][k]))p[k]=o[p.id][k];});}); }
         function computeAcousticTreatments(activeLayout) {
             const arch = computeArchitecturalObstructions();
             const halfW = arch.halfW;
@@ -2962,6 +2964,7 @@
                             : [selectedFaceMaterial, selectedFaceMaterial, matPanelSide, matPanelSide, matPanelSide, matPanelSide]
                     );
                     mesh.position.set(p.x, p.y, p.z);
+                    mesh.userData.pickId=p.id; mesh.userData.pickType=p.type.includes('Bass Trap')?'bass trap':'acoustic panel';
                     mesh.castShadow = true;
                     mesh.receiveShadow = true;
                     rootGroup.add(mesh);
@@ -3117,9 +3120,11 @@
                 // room dimensions, MLP, or methodology cause the speaker coordinates to move.
                 const speakerMountAssembly = new THREE.Group();
                 speakerMountAssembly.name = `${ch.id}-speaker-mount-assembly`;
+                speakerMountAssembly.userData.pickId=ch.id; speakerMountAssembly.userData.pickType='speaker';
                 rootGroup.add(speakerMountAssembly);
 
                 const spkGroup = new THREE.Group();
+                spkGroup.userData.pickId=ch.id; spkGroup.userData.pickType='speaker';
                 spkGroup.position.set(ch.x, ch.y, ch.z);
 
                 const boxGeo = new THREE.BoxGeometry(ch.dims.w, ch.dims.h, ch.dims.d);
@@ -4442,6 +4447,7 @@ function printConstructionBlueprint(){if(!constructionBlueprintSVG)renderConstru
             const layout = computeMethodologyLayout(state.standard);
             const ghostLayout = state.ghostStandard !== 'none' ? computeMethodologyLayout(state.ghostStandard) : null;
             const treatments = computeAcousticTreatments(layout);
+            applyManualPlacementOverrides(layout,treatments);
             const collisions = evaluateAllCollisions(layout, treatments);
             if (typeof renderMethodologyArchitectureAudit === 'function') renderMethodologyArchitectureAudit(layout, treatments, collisions);
             const optStatus = document.getElementById('expertPriorityScore');
@@ -4507,6 +4513,7 @@ function printConstructionBlueprint(){if(!constructionBlueprintSVG)renderConstru
             renderRationaleCards(layout, treatments);
             renderSchedules(layout, treatments);
             rebuild3DScene(layout, ghostLayout, treatments, collisions, methodologyTransitionFrom);
+            initObjectPicking();
         }
 
         function onSliderChange(changedControlId) {
