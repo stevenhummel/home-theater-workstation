@@ -4875,7 +4875,7 @@ function printConstructionBlueprint(){if(!constructionBlueprintSVG)renderConstru
                 if(!floorPoint.visible) return '';
                 const x=Math.max(18,Math.min(width-190,p.x+offset));
                 const y1=Math.max(24,Math.min(height-24,p.y));
-                const y2=Math.max(y1+12,Math.min(height-4,floorPoint.y));
+                const y2=Math.max(y1,Math.min(height-4,floorPoint.y));
                 const midY=(y1+y2)/2;
                 return '<line class="dim-ext" x1="'+p.x.toFixed(1)+'" y1="'+p.y.toFixed(1)+'" x2="'+x.toFixed(1)+'" y2="'+y1.toFixed(1)+'"/><line class="dim-line" x1="'+x.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x.toFixed(1)+'" y2="'+y2.toFixed(1)+'"/><line class="dim-line" x1="'+(x-5).toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+(x+5).toFixed(1)+'" y2="'+y1.toFixed(1)+'"/><line class="dim-line" x1="'+(x-5).toFixed(1)+'" y1="'+y2.toFixed(1)+'" x2="'+(x+5).toFixed(1)+'" y2="'+y2.toFixed(1)+'"/><text class="dim-label" text-anchor="start" x="'+(x+9).toFixed(1)+'" y="'+Math.max(14,Math.min(height-8,midY+4)).toFixed(1)+'">'+label+'</text>';
             };
