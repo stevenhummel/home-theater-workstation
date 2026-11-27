@@ -2036,7 +2036,7 @@
             ];
             // Solve the hallway-balancing R5 panel first so the other four right-wall
             // panels avoid its ACTUAL selected footprint. This matters when R5 must use
-            // the 24" slim substitute: reserving a fictitious 23.5" footprint would
+            // the 24" slim substitute: reserving a fictitious 24" footprint would
             // unnecessarily force another panel to move or become slim as well.
             const hallwayVoidCenterZ = arch.hallwayStartZ + (arch.hallwayEndZ - arch.hallwayStartZ) * 0.37;
             const r5 = solveNonOverlappingPanelZ(hallwayVoidCenterZ, halfW - 2.0, placedRight, rightObstructions, btEndZ + stdGap, state.roomD - 8);
@@ -3927,7 +3927,7 @@
                 {
                     icon: 'fa-wave-square text-orange-400',
                     title: 'GIK 244 Corner Traps & 4L/5R Palomar Array',
-                    body: `Elevated 12"×48" GIK 244 front-corner bass traps (Y=${treatments.bassTrapBottomY.toFixed(1)}"–${(treatments.bassTrapBottomY + ARCH.bassTrapH).toFixed(1)}", centered on the active side-surround axis) target front trihedral pressure zones. The 4-left / 5-right acoustic panel array defaults to 23.5"×48"×4" standard panels and automatically substitutes an 24"×45.5"×4" slim panel only when no collision-free standard-width wall bay exists. Substitution is one-for-one; comparable absorption performance is not assumed without product data.`
+                    body: `Elevated 12"×48" GIK 244 front-corner bass traps (Y=${treatments.bassTrapBottomY.toFixed(1)}"–${(treatments.bassTrapBottomY + ARCH.bassTrapH).toFixed(1)}", centered on the active side-surround axis) target front trihedral pressure zones. The 4-left / 5-right acoustic panel array defaults to 24"×48"×4" standard panels and automatically substitutes an 24"×48"×4" slim panel only when no collision-free standard-width wall bay exists. Substitution is one-for-one; comparable absorption performance is not assumed without product data.`
                 }
             ];
 
@@ -4200,7 +4200,7 @@
 
             const acousticPanels = treatments.panels.filter(p => p.id.startsWith('PNL-'));
             document.getElementById('symmetryVerificationBanner').innerHTML = `
-                <strong class="text-amber-300">Symmetry & Reflection Tracking Audit:</strong> PNL-L1 and PNL-R1 dynamically track front L/R 1st-order specular reflections (Z=${treatments.reflZ.toFixed(1)}) as MLP Z changes, maintaining required switch, speaker, and panel clearances. The 4-left / 5-right layout contains <strong>${acousticPanels.length} acoustic panels total</strong>: <strong>${standardPanels} standard 23.5" panels</strong>${slimSubstitutions.length ? ` and <strong>${slimSubstitutions.length} slim 24" one-for-one substitute${slimSubstitutions.length === 1 ? '' : 's'} (${slimSubstitutions.map(p => p.id).join(', ')})</strong>` : ''}.  PNL-L2 remains centered on the 35" left door; PNL-R5 balances the rear-left 41" hallway void. Panel positions are now greedily optimized against the full first- and second-order side-wall bounce-point set, subject to existing wall-bay, door, switch, speaker, spacing and slim-substitution constraints. Primary (1st-order) rays are orange; secondary (2nd-order) rays are purple. A panel-intercepted path is shown faint and dotted.
+                <strong class="text-amber-300">Symmetry & Reflection Tracking Audit:</strong> PNL-L1 and PNL-R1 dynamically track front L/R 1st-order specular reflections as MLP Z changes, maintaining required switch, speaker, and panel clearances. The 4-left / 5-right layout contains <strong>${acousticPanels.length} acoustic panels total</strong>, all modeled as <strong>24" × 48" × 4"</strong>. If a full-size panel cannot fit within a permitted wall bay, it is marked unplaced rather than replaced with a smaller panel. PNL-L2 remains centered on the 35" left door; PNL-R5 balances the rear-left 41" hallway void. Panel positions are optimized against the first- and second-order side-wall bounce-point set, subject to wall-bay, door, switch, speaker, and spacing constraints. Primary (1st-order) rays are orange; secondary (2nd-order) rays are purple. A panel-intercepted path is shown faint and dotted.
             `;
 
             document.getElementById('panelTableBody').innerHTML = panelRows.map(pr => `
