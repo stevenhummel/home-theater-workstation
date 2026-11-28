@@ -1076,8 +1076,8 @@
             const sw2DefaultCenterZ = 164.0;
             const sw1Override = state.manualOverrides['SW-1'];
             const sw2Override = state.manualOverrides['SW-2'];
-            const sw1CenterZ = Number.isFinite(sw1Override?.z) ? sw1Override.z : (sw1DefaultStartZ + sw1DefaultEndZ) / 2;
-            const sw2CenterZ = Number.isFinite(sw2Override?.z) ? sw2Override.z : sw2DefaultCenterZ;
+            const sw1CenterZ = Number.isFinite(sw1Override?.z) ? sw1Override.z : ((sw1DefaultStartZ + sw1DefaultEndZ) / 2 + (Number.isFinite(sw1Override?.offset?.z) ? sw1Override.offset.z : 0));
+            const sw2CenterZ = Number.isFinite(sw2Override?.z) ? sw2Override.z : (sw2DefaultCenterZ + (Number.isFinite(sw2Override?.offset?.z) ? sw2Override.offset.z : 0));
             const sw1StartZ = sw1CenterZ - ARCH.switchW / 2;
             const sw1EndZ = sw1CenterZ + ARCH.switchW / 2;
             const sw2StartZ = sw2CenterZ - ARCH.switchW / 2;
@@ -1872,6 +1872,13 @@
    item.elevDeg=THREE.MathUtils.radToDeg(Math.atan2(item.y-state.earY,horiz));
    item.azDeg=THREE.MathUtils.radToDeg(Math.atan2(Math.abs(item.x),-dz));
    item.aimTarget={x:0,y:state.earY,z:state.mlpZ};
+   item.bottomY=item.y-(item.group==='Atmos'?getAimedBoxMetrics(item.x,item.y,item.z,item.dims).halfY:item.dims.h/2);
+   if(item.group==='Atmos'){
+    const m=getAimedBoxMetrics(item.x,item.y,item.z,item.dims);
+    item.mountRearPoint={x:item.x+m.rearOffset.x+m.rearNormal.x*0.55,y:item.y+m.rearOffset.y+m.rearNormal.y*0.55,z:item.z+m.rearOffset.z+m.rearNormal.z*0.55};
+    item.mountRearNormal={x:m.rearNormal.x,y:m.rearNormal.y,z:m.rearNormal.z};
+    item.mountHalfExtents={x:m.halfX,y:m.halfY,z:m.halfZ};
+   }
   }
  };
  layout.channels.forEach(c=>apply(c,{x:c.x,y:c.y,z:c.z}));
